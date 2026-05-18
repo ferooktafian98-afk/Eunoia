@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#3A5A4A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Eunoia">
+  <title>Eunoia — Manajemen Diri</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+</head>
+<body>
+
+<!-- ============================================================
+     ONBOARDING / SETUP
+     ============================================================ -->
+<div id="page-setup" style="display:none; flex-direction:column; min-height:100vh; background:var(--forest);">
+  <div class="setup-hero">
+    <div class="setup-logo">Eunoia<em>.</em></div>
+    <div class="setup-tagline">Manajemen diri yang adaptif.<br>Bukan sekadar to-do list.</div>
+  </div>
+
+  <div class="setup-form">
+    <h2 class="serif" style="font-size:22px; margin-bottom:6px">Hai, siapa namamu?</h2>
+    <p style="font-size:13px; color:var(--bark); margin-bottom:24px; line-height:1.5">
+      Aplikasi ini akan belajar dari kebiasaanmu dan menyesuaikan diri setiap hari.
+    </p>
+
+    <div class="form-group">
+      <label class="form-label" for="setup-name">Nama panggilanmu</label>
+      <input class="form-input" id="setup-name" type="text" placeholder="contoh: Raka, Dina, Budi…"
+        onkeydown="if(event.key==='Enter') Modals.saveSetup()">
+    </div>
+
+    <div style="margin-top:8px; padding:14px; background:var(--cream); border-radius:var(--radius-md); margin-bottom:24px;">
+      <div class="label-upper" style="margin-bottom:8px">4 pilar aplikasi ini</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <div style="font-size:12px; color:var(--deep)"><i class="ti ti-eye" style="color:var(--purple)" aria-hidden="true"></i> Cermin harian</div>
+        <div style="font-size:12px; color:var(--deep)"><i class="ti ti-bolt" style="color:var(--amber)" aria-hidden="true"></i> Energi manager</div>
+        <div style="font-size:12px; color:var(--deep)"><i class="ti ti-refresh" style="color:var(--coral)" aria-hidden="true"></i> Rutinitas cerdas</div>
+        <div style="font-size:12px; color:var(--deep)"><i class="ti ti-writing" style="color:var(--forest)" aria-hidden="true"></i> Kontrak diri</div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" style="background:var(--forest);" onclick="Modals.saveSetup()">
+      <i class="ti ti-arrow-right" aria-hidden="true"></i> Mulai perjalananku
+    </button>
+
+    <p style="font-size:11px; color:var(--sand); text-align:center; margin-top:16px;">
+      Semua data tersimpan di perangkatmu · Gratis selamanya
+    </p>
+  </div>
+</div>
+
+<!-- ============================================================
+     MAIN APP SHELL
+     ============================================================ -->
+<div id="app" style="display:none; flex-direction:column; min-height:100vh;">
+
+  <!-- ===================== HOME ===================== -->
+  <div class="page" id="page-home">
+    <div class="screen-header" style="padding-top:20px;">
+      <h1 class="page-title" id="home-greeting">Selamat pagi,<br><em>Teman</em></h1>
+      <p class="subtext" id="home-sub">Memuat…</p>
+    </div>
+
+    <!-- Streak week -->
+    <div class="streak-row" id="home-streak"></div>
+
+    <!-- Energy hero -->
+    <div style="margin-top:16px;">
+      <div class="energy-hero">
+        <div class="energy-label">Energi hari ini</div>
+        <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
+          <div class="energy-number" id="home-energy-num">—</div>
+          <div style="font-size:13px; opacity:.6;">/ 100</div>
+        </div>
+        <div class="energy-desc" id="home-energy-desc">Memuat…</div>
+        <div class="energy-bar-wrap"><div class="energy-bar" id="home-energy-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <!-- Insight -->
+    <div style="margin-top:14px;">
+      <div class="insight-card">
+        <div class="insight-tag"><i class="ti ti-sparkles" aria-hidden="true"></i> Insight hari ini</div>
+        <div class="insight-text" id="home-insight-text">Memuat insight…</div>
+        <div class="insight-sub" id="home-insight-sub"></div>
+      </div>
+    </div>
+
+    <!-- Pillar mini cards -->
+    <div class="sec-title">Pilarmu hari ini</div>
+    <div class="scroll-row">
+      <div class="pillar-mini" onclick="Router.go('cermin')">
+        <div class="pillar-icon" style="background:var(--purple-light)">
+          <i class="ti ti-eye" style="color:var(--purple)" aria-hidden="true"></i>
+        </div>
+        <div class="pillar-name">Cermin</div>
+        <div class="pillar-status" id="ps-cermin">—</div>
+      </div>
+      <div class="pillar-mini" onclick="Router.go('energi')">
+        <div class="pillar-icon" style="background:var(--amber-light)">
+          <i class="ti ti-bolt" style="color:var(--amber)" aria-hidden="true"></i>
+        </div>
+        <div class="pillar-name">Energi</div>
+        <div class="pillar-status" id="ps-energi">—</div>
+      </div>
+      <div class="pillar-mini" onclick="Router.go('rutinitas')">
+        <div class="pillar-icon" style="background:var(--coral-light)">
+          <i class="ti ti-refresh" style="color:var(--coral)" aria-hidden="true"></i>
+        </div>
+        <div class="pillar-name">Rutinitas</div>
+        <div class="pillar-status" id="ps-rutinitas">—</div>
+      </div>
+      <div class="pillar-mini" onclick="Router.go('kontrak')">
+        <div class="pillar-icon" style="background:var(--info-bg)">
+          <i class="ti ti-writing" style="color:var(--forest)" aria-hidden="true"></i>
+        </div>
+        <div class="pillar-name">Kontrak</div>
+        <div class="pillar-status" id="ps-kontrak">—</div>
+      </div>
+    </div>
+
+    <!-- Quick check-in -->
+    <div class="sec-title">Akses cepat</div>
+    <div class="prompt-list" style="margin-bottom:8px;">
+      <div class="prompt-item" onclick="Router.go('cermin')">
+        <div class="prompt-dot" style="background:var(--purple)"></div>
+        <div class="prompt-text">Isi check-in pagi hari ini</div>
+        <i class="ti ti-chevron-right" style="font-size:14px; color:var(--sand)" aria-hidden="true"></i>
+      </div>
+      <div class="prompt-item" onclick="Modals.openAddActivity(); Router.go('energi')">
+        <div class="prompt-dot" style="background:var(--amber)"></div>
+        <div class="prompt-text">Tambah aktivitas ke tracker energi</div>
+        <i class="ti ti-chevron-right" style="font-size:14px; color:var(--sand)" aria-hidden="true"></i>
+      </div>
+      <div class="prompt-item" onclick="Modals.openAddContract(); Router.go('kontrak')">
+        <div class="prompt-dot" style="background:var(--forest)"></div>
+        <div class="prompt-text">Buat kontrak diri baru</div>
+        <i class="ti ti-chevron-right" style="font-size:14px; color:var(--sand)" aria-hidden="true"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== CERMIN ===================== -->
+  <div class="page" id="page-cermin">
+    <div class="top-bar">
+      <button class="back-btn" onclick="Router.go('home')">
+        <i class="ti ti-arrow-left" aria-hidden="true"></i> Beranda
+      </button>
+      <span style="font-size:12px; color:var(--bark);" id="cermin-time"></span>
+    </div>
+    <div class="screen-header">
+      <h1 class="page-title" style="font-size:24px;">Cermin <em>harian</em></h1>
+      <p class="subtext">Refleksi diri · 3 pertanyaan · ~2 menit</p>
+    </div>
+
+    <div class="reflection-list">
+
+      <!-- Mood -->
+      <div class="q-card">
+        <div class="q-label">Perasaan</div>
+        <div class="q-text">Bagaimana kondisi fisik dan mentalmu saat ini?</div>
+        <div class="mood-row">
+          <button class="mood-btn" aria-label="Sangat buruk">😔</button>
+          <button class="mood-btn" aria-label="Kurang baik">😕</button>
+          <button class="mood-btn" aria-label="Biasa saja">😐</button>
+          <button class="mood-btn" aria-label="Cukup baik">🙂</button>
+          <button class="mood-btn" aria-label="Luar biasa">😄</button>
+        </div>
+      </div>
+
+      <!-- Sleep -->
+      <div class="q-card">
+        <div class="q-label">Tidur</div>
+        <div class="q-text">Semalam kamu tidur berapa jam?</div>
+        <input type="range" class="form-range" id="cermin-sleep" min="3" max="11" step="0.5" value="7">
+        <div class="slider-labels">
+          <span>3 jam</span>
+          <span id="cermin-sleep-val" style="color:var(--deep); font-weight:500;">7 jam</span>
+          <span>11 jam</span>
+        </div>
+      </div>
+
+      <!-- Note -->
+      <div class="q-card">
+        <div class="q-label">Catatan bebas (opsional)</div>
+        <div class="q-text" style="font-size:15px; margin-bottom:10px;">Ada yang ingin kamu catat?</div>
+        <textarea class="form-textarea" id="cermin-note" placeholder="Pikiran, rencana, atau apapun yang kamu rasakan hari ini…"></textarea>
+      </div>
+
+      <!-- Patterns -->
+      <div class="q-card" style="background:var(--purple-light); border-color:rgba(107,91,138,0.2);">
+        <div class="q-label" style="color:var(--purple);">Pola terdeteksi</div>
+        <div class="pattern-wrap" id="cermin-patterns">
+          <span style="font-size:13px; color:var(--bark);">Isi check-in beberapa hari untuk melihat polamu.</span>
+        </div>
+      </div>
+
+      <!-- Save -->
+      <button class="btn btn-primary" id="cermin-save-btn" onclick="Modals.saveCermin()" style="margin:0 0 8px;">
+        <i class="ti ti-check" aria-hidden="true"></i> Simpan check-in
+      </button>
+    </div>
+  </div>
+
+  <!-- ===================== ENERGI ===================== -->
+  <div class="page" id="page-energi">
+    <div class="top-bar">
+      <button class="back-btn" onclick="Router.go('home')">
+        <i class="ti ti-arrow-left" aria-hidden="true"></i> Beranda
+      </button>
+    </div>
+    <div class="screen-header">
+      <h1 class="page-title" style="font-size:24px;">Energi <em>manager</em></h1>
+      <p class="subtext">Kelola energi, bukan cuma waktu</p>
+    </div>
+
+    <!-- Energy summary -->
+    <div style="margin:0 20px;">
+      <div class="energy-hero" style="padding:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div class="energy-label">Skor energi sekarang</div>
+            <div style="font-family:'DM Serif Display',serif; font-size:40px; color:white; margin-top:2px; line-height:1;">
+              <span id="energi-score">—</span><span style="font-size:16px; opacity:.6;"> /100</span>
+            </div>
+          </div>
+          <div style="text-align:right; font-size:12px; opacity:.8; line-height:1.8;">
+            <div>Drain: <span id="energi-drains">0</span></div>
+            <div>Restore: <span id="energi-restores">0</span></div>
+            <div style="font-weight:500;">Total: <span id="energi-total">—</span></div>
+          </div>
+        </div>
+        <div class="energy-bar-wrap" style="margin-top:12px;">
+          <div class="energy-bar" id="energi-bar" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add activity -->
+    <div style="padding:0 20px; margin-top:14px;">
+      <button class="btn btn-outline" style="width:100%;" onclick="Modals.openAddActivity()">
+        <i class="ti ti-plus" aria-hidden="true"></i> Tambah aktivitas
+      </button>
+    </div>
+
+    <div class="sec-title">Aktivitas hari ini</div>
+    <div class="activity-list" id="energi-list" style="margin-bottom:8px;"></div>
+
+    <!-- Tip -->
+    <div style="margin:14px 20px 0; background:var(--purple-light); border-radius:var(--radius-md); padding:12px 14px; border:1px solid rgba(107,91,138,0.15);">
+      <div style="font-size:10px; font-weight:500; color:var(--purple); text-transform:uppercase; letter-spacing:.06em; margin-bottom:5px;">
+        <i class="ti ti-bulb" aria-hidden="true"></i> Tips
+      </div>
+      <div style="font-size:13px; color:var(--deep); line-height:1.5;">
+        Aktivitas yang <span style="color:var(--info-fg); font-weight:500;">memulihkan</span> energi: olahraga ringan, membaca, meditasi, tidur siang.
+        Aktivitas yang <span style="color:var(--coral); font-weight:500;">menguras</span>: rapat panjang, multitasking, konflik interpersonal.
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== RUTINITAS ===================== -->
+  <div class="page" id="page-rutinitas">
+    <div class="top-bar">
+      <button class="back-btn" onclick="Router.go('home')">
+        <i class="ti ti-arrow-left" aria-hidden="true"></i> Beranda
+      </button>
+    </div>
+    <div class="screen-header">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div>
+          <h1 class="page-title" style="font-size:24px;">Rutinitas <em>cerdas</em></h1>
+          <p class="subtext" id="rutinitas-progress">0 / 0 selesai</p>
+        </div>
+      </div>
+      <!-- Progress bar -->
+      <div style="margin-top:10px; background:var(--stone); border-radius:3px; height:4px;">
+        <div id="rutinitas-bar" style="height:4px; border-radius:3px; background:var(--forest); width:0%; transition:width .6s ease;"></div>
+      </div>
+    </div>
+
+    <!-- Context banner (lite mode) -->
+    <div id="rutinitas-banner" style="display:none; margin:0 20px 14px; background:var(--coral-light); border-radius:var(--radius-md); padding:12px 14px; align-items:flex-start; gap:10px; border:1px solid rgba(196,96,74,0.2); font-size:13px; color:var(--deep); line-height:1.4;"></div>
+
+    <!-- Add routine -->
+    <div style="padding:0 20px; margin-bottom:14px;">
+      <button class="btn btn-outline" style="width:100%;" onclick="Modals.openAddRoutine()">
+        <i class="ti ti-plus" aria-hidden="true"></i> Tambah rutinitas
+      </button>
+    </div>
+
+    <div class="routine-list" id="rutinitas-list"></div>
+
+    <!-- Reset hint -->
+    <div style="padding:16px 20px; font-size:12px; color:var(--sand); text-align:center;">
+      Rutinitas direset otomatis setiap hari tengah malam
+    </div>
+  </div>
+
+  <!-- ===================== KONTRAK ===================== -->
+  <div class="page" id="page-kontrak">
+    <div class="top-bar">
+      <button class="back-btn" onclick="Router.go('home')">
+        <i class="ti ti-arrow-left" aria-hidden="true"></i> Beranda
+      </button>
+    </div>
+    <div class="screen-header">
+      <h1 class="page-title" style="font-size:24px;">Kontrak <em>diri</em></h1>
+      <p class="subtext">Komitmen dengan akuntabilitas nyata</p>
+    </div>
+
+    <!-- Add contract -->
+    <div style="padding:0 20px; margin-bottom:16px;">
+      <button class="btn btn-primary" onclick="Modals.openAddContract()">
+        <i class="ti ti-plus" aria-hidden="true"></i> Buat kontrak baru
+      </button>
+    </div>
+
+    <div id="kontrak-list" style="margin-bottom:8px;"></div>
+  </div>
+
+  <!-- ============================================================
+       BOTTOM NAV
+       ============================================================ -->
+  <nav class="bottom-nav" aria-label="Navigasi utama">
+    <div class="nav-item active" id="nav-home" onclick="Router.go('home')" role="button" tabindex="0" aria-label="Beranda">
+      <i class="ti ti-home" aria-hidden="true"></i>
+      <span class="nav-label">Beranda</span>
+    </div>
+    <div class="nav-item" id="nav-cermin" onclick="Router.go('cermin')" role="button" tabindex="0" aria-label="Cermin harian">
+      <i class="ti ti-eye" aria-hidden="true"></i>
+      <span class="nav-label">Cermin</span>
+    </div>
+    <div class="nav-item" id="nav-energi" onclick="Router.go('energi')" role="button" tabindex="0" aria-label="Energi manager">
+      <i class="ti ti-bolt" aria-hidden="true"></i>
+      <span class="nav-label">Energi</span>
+    </div>
+    <div class="nav-item" id="nav-rutinitas" onclick="Router.go('rutinitas')" role="button" tabindex="0" aria-label="Rutinitas cerdas">
+      <i class="ti ti-refresh" aria-hidden="true"></i>
+      <span class="nav-label">Rutinitas</span>
+    </div>
+    <div class="nav-item" id="nav-kontrak" onclick="Router.go('kontrak')" role="button" tabindex="0" aria-label="Kontrak diri">
+      <i class="ti ti-writing" aria-hidden="true"></i>
+      <span class="nav-label">Kontrak</span>
+    </div>
+  </nav>
+
+</div><!-- /#app -->
+
+<!-- ============================================================
+     MODAL: TAMBAH AKTIVITAS
+     ============================================================ -->
+<div class="modal-overlay" id="modal-activity" role="dialog" aria-modal="true" aria-labelledby="modal-act-title">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <h2 class="modal-title" id="modal-act-title">Tambah Aktivitas</h2>
+
+    <div class="form-group">
+      <label class="form-label" for="act-name-input">Nama aktivitas</label>
+      <input class="form-input" id="act-name-input" type="text" placeholder="contoh: Olahraga, Rapat, Meditasi…">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="act-duration-input">Durasi (opsional)</label>
+      <input class="form-input" id="act-duration-input" type="text" placeholder="contoh: 30 menit, 1 jam…">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="act-type-select">Tipe aktivitas</label>
+      <select class="form-select" id="act-type-select">
+        <option value="restore">😊 Memulihkan energi</option>
+        <option value="drain">😓 Menguras energi</option>
+        <option value="neutral">😐 Netral</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Seberapa besar dampaknya? <span id="act-energy-display" style="font-weight:600;">0</span></label>
+      <input type="range" class="form-range" id="act-energy-input" min="0" max="30" value="10">
+      <div class="slider-labels"><span>Kecil</span><span>Besar</span></div>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:4px;">
+      <button class="btn btn-outline" style="flex:1;" onclick="Modals.close('modal-activity')">Batal</button>
+      <button class="btn btn-primary" style="flex:2;" onclick="Modals.saveActivity()">
+        <i class="ti ti-plus" aria-hidden="true"></i> Tambahkan
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL: TAMBAH RUTINITAS
+     ============================================================ -->
+<div class="modal-overlay" id="modal-routine" role="dialog" aria-modal="true" aria-labelledby="modal-rt-title">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <h2 class="modal-title" id="modal-rt-title">Tambah Rutinitas</h2>
+
+    <div class="form-group">
+      <label class="form-label" for="rt-title-input">Nama rutinitas</label>
+      <input class="form-input" id="rt-title-input" type="text" placeholder="contoh: Olahraga pagi, Membaca, Meditasi…">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="rt-time-input">Jam pelaksanaan</label>
+      <input class="form-input" id="rt-time-input" type="time" value="07:00">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="rt-energy-input">Energi yang dipulihkan/digunakan</label>
+      <input class="form-input" id="rt-energy-input" type="number" placeholder="contoh: 10 (pulihkan) atau -15 (kuras)">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="rt-lite-input">Versi Lite (opsional)</label>
+      <input class="form-input" id="rt-lite-input" type="text" placeholder="Versi lebih ringan saat kondisi kurang fit…">
+      <div style="font-size:11px; color:var(--bark); margin-top:5px;">
+        Versi ini akan aktif otomatis saat energi atau mood rendah.
+      </div>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:4px;">
+      <button class="btn btn-outline" style="flex:1;" onclick="Modals.close('modal-routine')">Batal</button>
+      <button class="btn btn-primary" style="flex:2;" onclick="Modals.saveRoutine()">
+        <i class="ti ti-plus" aria-hidden="true"></i> Tambahkan
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL: BUAT KONTRAK
+     ============================================================ -->
+<div class="modal-overlay" id="modal-contract" role="dialog" aria-modal="true" aria-labelledby="modal-kt-title">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <h2 class="modal-title" id="modal-kt-title">Buat Kontrak Diri</h2>
+
+    <div class="form-group">
+      <label class="form-label" for="kt-title-input">Judul komitmen</label>
+      <input class="form-input" id="kt-title-input" type="text" placeholder="contoh: Tidur sebelum jam 23.00">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="kt-promise-input">Tuliskan janjimu</label>
+      <textarea class="form-textarea" id="kt-promise-input"
+        placeholder="Saya berkomitmen untuk… karena…"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="kt-partner-input">Accountability partner (opsional)</label>
+      <input class="form-input" id="kt-partner-input" type="text" placeholder="Nama teman atau keluarga yang tahu komitmenmu">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="kt-duration-input">Durasi (hari)</label>
+      <input class="form-input" id="kt-duration-input" type="number" min="1" max="365" value="30">
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:4px;">
+      <button class="btn btn-outline" style="flex:1;" onclick="Modals.close('modal-contract')">Batal</button>
+      <button class="btn btn-primary" style="flex:2;" onclick="Modals.saveContract()">
+        <i class="ti ti-writing" aria-hidden="true"></i> Buat Kontrak
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="js/store.js"></script>
+<script src="js/app.js"></script>
+<script src="js/modals.js"></script>
+
+</body>
+</html>

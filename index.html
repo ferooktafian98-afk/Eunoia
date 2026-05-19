@@ -1,480 +1,1330 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#3A5A4A">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Eunoia">
-  <title>Eunoia — Manajemen Diri</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0D0D0D">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Eunoia">
+<title>Eunoia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+/* ─── RESET ─────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{font-size:16px;height:100%}
+
+/* ─── TOKENS ─────────────────────────────────────── */
+:root{
+  --ink:       #0D0D0D;
+  --ink-2:     #1A1A1A;
+  --ink-3:     #2C2C2C;
+  --muted:     #6B6B6B;
+  --border:    #E8E4DE;
+  --border-2:  #F0EDE8;
+  --paper:     #FAF8F5;
+  --paper-2:   #F4F1EC;
+  --white:     #FFFFFF;
+
+  --gold:      #B8860B;
+  --gold-2:    #D4A017;
+  --gold-bg:   #FBF5E6;
+  --sage:      #4A6741;
+  --sage-2:    #5C7A52;
+  --sage-bg:   #EDF2EB;
+  --rust:      #8B3A2A;
+  --rust-bg:   #F5EAE7;
+  --plum:      #5C3D6B;
+  --plum-bg:   #F0EBF5;
+
+  --r-lg: 20px;
+  --r-md: 14px;
+  --r-sm: 10px;
+  --ease: cubic-bezier(.4,0,.2,1);
+  --t:    .22s;
+}
+
+/* ─── BODY ───────────────────────────────────────── */
+body{
+  font-family:'Outfit',sans-serif;
+  background:#0D0D0D;
+  color:var(--ink);
+  min-height:100dvh;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+}
+
+/* ─── SHELL ──────────────────────────────────────── */
+#shell{
+  width:100%;
+  max-width:430px;
+  min-height:100dvh;
+  background:var(--paper);
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+/* ─── PAGES ──────────────────────────────────────── */
+.page{
+  display:none;
+  flex-direction:column;
+  flex:1;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding-bottom:80px;
+  scroll-behavior:smooth;
+}
+.page.active{
+  display:flex;
+  animation:rise .3s var(--ease) both;
+}
+@keyframes rise{
+  from{opacity:0;transform:translateY(12px)}
+  to  {opacity:1;transform:translateY(0)}
+}
+
+/* ─── SETUP PAGE ─────────────────────────────────── */
+#page-setup{
+  background:var(--ink);
+  min-height:100dvh;
+  padding-bottom:0;
+}
+.setup-top{
+  padding:64px 28px 40px;
+  position:relative;
+  overflow:hidden;
+}
+.setup-top::before{
+  content:'';position:absolute;
+  width:300px;height:300px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(184,134,11,.18) 0%,transparent 70%);
+  top:-80px;right:-80px;pointer-events:none;
+}
+.logo-word{
+  font-family:'Cormorant Garamond',serif;
+  font-size:64px;font-weight:300;
+  color:#fff;letter-spacing:-2px;line-height:1;
+}
+.logo-word em{color:var(--gold-2);font-style:italic}
+.setup-sub{
+  font-size:14px;color:rgba(255,255,255,.5);
+  margin-top:12px;line-height:1.6;font-weight:300;
+}
+.setup-card{
+  background:var(--white);
+  border-radius:28px 28px 0 0;
+  flex:1;padding:32px 24px 48px;
+}
+.setup-pillars{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  margin:20px 0 28px;
+}
+.setup-pillar{
+  background:var(--paper-2);border-radius:var(--r-md);
+  padding:14px;display:flex;flex-direction:column;gap:8px;
+}
+.setup-pillar-icon{
+  width:32px;height:32px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;
+}
+.setup-pillar-name{font-size:12px;font-weight:500;color:var(--ink)}
+
+/* ─── TOP NAV ────────────────────────────────────── */
+.topnav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 20px 4px;flex-shrink:0;
+}
+.back-btn{
+  display:flex;align-items:center;gap:6px;
+  border:none;background:none;cursor:pointer;
+  font-family:'Outfit',sans-serif;font-size:13px;
+  color:var(--muted);padding:4px 0;
+  transition:color var(--t);
+}
+.back-btn:hover{color:var(--ink)}
+.page-badge{
+  font-size:10px;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);
+}
+
+/* ─── SCREEN HEADER ──────────────────────────────── */
+.scr-head{padding:8px 24px 20px;flex-shrink:0}
+.scr-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:36px;font-weight:300;color:var(--ink);
+  line-height:1.1;letter-spacing:-.5px;
+}
+.scr-title em{font-style:italic;color:var(--sage)}
+.scr-sub{font-size:13px;color:var(--muted);margin-top:4px;font-weight:300}
+
+/* ─── HOME HERO ──────────────────────────────────── */
+.home-hero{
+  margin:0 20px;
+  background:var(--ink);
+  border-radius:24px;
+  padding:28px 24px;
+  position:relative;overflow:hidden;
+  color:white;
+}
+.home-hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at top right,rgba(184,134,11,.25) 0%,transparent 60%);
+  pointer-events:none;
+}
+.home-hero::after{
+  content:'';position:absolute;
+  width:200px;height:200px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.05);
+  bottom:-80px;right:-60px;pointer-events:none;
+}
+.hero-label{
+  font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  opacity:.5;font-weight:400;
+}
+.hero-energy{
+  font-family:'Cormorant Garamond',serif;
+  font-size:80px;font-weight:300;line-height:1;
+  margin:4px 0 2px;
+}
+.hero-energy sup{font-size:22px;opacity:.4;vertical-align:super}
+.hero-desc{font-size:12px;opacity:.6;font-weight:300}
+.hero-bar-wrap{
+  margin-top:20px;
+  height:2px;background:rgba(255,255,255,.1);border-radius:1px;
+}
+.hero-bar{height:2px;border-radius:1px;background:linear-gradient(90deg,var(--gold),var(--gold-2));transition:width .8s var(--ease)}
+.hero-stats{
+  display:flex;gap:20px;margin-top:16px;
+}
+.hero-stat{font-size:11px;opacity:.5}
+.hero-stat strong{display:block;font-size:16px;opacity:1;font-weight:500;color:white}
+
+/* ─── STREAK ─────────────────────────────────────── */
+.streak-wrap{padding:0 20px;display:flex;gap:6px;margin-top:20px}
+.s-day{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px}
+.s-dot{
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:500;
+  transition:transform var(--t);
+}
+.s-dot:hover{transform:scale(1.1)}
+.s-dot.done{background:var(--ink);color:white}
+.s-dot.today{background:var(--gold);color:white}
+.s-dot.miss{background:var(--border-2);color:var(--muted)}
+.s-label{font-size:9px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+
+/* ─── INSIGHT CARD ───────────────────────────────── */
+.insight{
+  margin:16px 20px 0;
+  background:var(--gold-bg);
+  border-radius:var(--r-lg);
+  padding:18px 20px;
+  border:1px solid rgba(184,134,11,.15);
+  position:relative;overflow:hidden;
+}
+.insight::before{
+  content:'"';
+  font-family:'Cormorant Garamond',serif;
+  font-size:120px;line-height:1;
+  color:rgba(184,134,11,.1);
+  position:absolute;top:-20px;left:10px;
+  pointer-events:none;
+}
+.insight-tag{
+  font-size:10px;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--gold);
+  margin-bottom:8px;display:flex;align-items:center;gap:5px;
+}
+.insight-text{
+  font-family:'Cormorant Garamond',serif;
+  font-size:18px;font-weight:400;color:var(--ink);
+  line-height:1.5;position:relative;
+}
+.insight-sub{font-size:11px;color:var(--muted);margin-top:6px}
+
+/* ─── SECTION TITLE ──────────────────────────────── */
+.sec{
+  font-size:10px;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);
+  padding:0 24px;margin:22px 0 12px;
+}
+
+/* ─── PILLAR CARDS (scroll) ──────────────────────── */
+.pillars-row{
+  display:flex;gap:10px;padding:0 20px;
+  overflow-x:auto;scrollbar-width:none;
+}
+.pillars-row::-webkit-scrollbar{display:none}
+.pillar{
+  flex-shrink:0;width:130px;
+  border-radius:var(--r-lg);
+  padding:16px;
+  background:var(--white);
+  border:1px solid var(--border);
+  cursor:pointer;
+  transition:transform var(--t),box-shadow var(--t),border-color var(--t);
+}
+.pillar:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.08)}
+.pillar:active{transform:scale(.97)}
+.pillar-ico{
+  width:38px;height:38px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;margin-bottom:12px;
+}
+.pillar-name{font-size:12px;font-weight:500;color:var(--ink);margin-bottom:3px}
+.pillar-val{font-size:11px;color:var(--muted)}
+
+/* ─── QUICK ACCESS ───────────────────────────────── */
+.qa-list{padding:0 20px;display:flex;flex-direction:column;gap:8px}
+.qa{
+  display:flex;align-items:center;gap:14px;
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:var(--r-md);
+  padding:14px 16px;cursor:pointer;
+  transition:background var(--t),border-color var(--t),transform var(--t);
+}
+.qa:hover{background:var(--paper-2);border-color:var(--border)}
+.qa:active{transform:scale(.99)}
+.qa-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.qa-text{font-size:13px;color:var(--ink);flex:1;font-weight:400}
+.qa-arr{font-size:14px;color:var(--border)}
+
+/* ─── CERMIN ─────────────────────────────────────── */
+.q-cards{padding:0 20px;display:flex;flex-direction:column;gap:12px}
+.q-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:20px;
+}
+.q-label{
+  font-size:10px;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:8px;
+}
+.q-question{
+  font-family:'Cormorant Garamond',serif;
+  font-size:20px;font-weight:400;color:var(--ink);
+  line-height:1.35;margin-bottom:16px;
+}
+.moods{display:flex;gap:8px}
+.mood{
+  flex:1;height:52px;border-radius:var(--r-sm);
+  border:1.5px solid var(--border-2);
+  background:var(--paper-2);
+  cursor:pointer;font-size:22px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.mood:hover{transform:scale(1.1)}
+.mood.on{border-color:var(--ink);background:var(--ink-2);}
+
+.sl{
+  -webkit-appearance:none;width:100%;height:3px;
+  border-radius:2px;background:var(--border);
+  outline:none;cursor:pointer;margin-top:8px;
+}
+.sl::-webkit-slider-thumb{
+  -webkit-appearance:none;width:22px;height:22px;
+  border-radius:50%;background:var(--ink);cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.2);
+}
+.sl-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:8px}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--plum-bg);color:var(--plum);
+  font-size:11px;font-weight:500;
+  padding:5px 12px;border-radius:20px;
+}
+
+/* ─── ENERGI ─────────────────────────────────────── */
+.e-hero{
+  margin:0 20px;
+  background:var(--ink-2);border-radius:24px;padding:20px 22px;
+  color:white;position:relative;overflow:hidden;
+}
+.e-hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at bottom left,rgba(74,103,65,.3),transparent 60%);
+  pointer-events:none;
+}
+.e-score{
+  font-family:'Cormorant Garamond',serif;
+  font-size:52px;font-weight:300;line-height:1;
+}
+.e-score span{font-size:16px;opacity:.4}
+.e-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.e-stat{background:rgba(255,255,255,.06);border-radius:10px;padding:12px}
+.e-stat-label{font-size:10px;opacity:.5;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.e-stat-val{font-size:18px;font-weight:500}
+
+.act-list{padding:0 20px;display:flex;flex-direction:column;gap:8px}
+.act{
+  display:flex;align-items:center;gap:12px;
+  background:var(--white);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:14px;
+}
+.act-ico{
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;flex-shrink:0;
+}
+.act-info{flex:1;min-width:0}
+.act-name{font-size:13px;font-weight:500;color:var(--ink)}
+.act-dur{font-size:11px;color:var(--muted);margin-top:2px}
+.act-del{color:var(--border);font-size:16px;cursor:pointer;padding:4px;flex-shrink:0;transition:color var(--t)}
+.act-del:hover{color:var(--rust)}
+.epill{
+  font-size:11px;font-weight:600;
+  padding:4px 12px;border-radius:20px;flex-shrink:0;
+}
+.ep-drain{background:var(--rust-bg);color:var(--rust)}
+.ep-restore{background:var(--sage-bg);color:var(--sage)}
+.ep-neutral{background:var(--border-2);color:var(--muted)}
+
+/* ─── RUTINITAS ──────────────────────────────────── */
+.rt-progress{
+  margin:0 20px 16px;
+  background:var(--white);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:18px 20px;
+}
+.rt-prog-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.rt-prog-title{font-size:13px;font-weight:500;color:var(--ink)}
+.rt-prog-val{font-size:13px;color:var(--muted)}
+.rt-prog-bar{height:3px;background:var(--border);border-radius:2px}
+.rt-prog-fill{height:3px;border-radius:2px;background:var(--ink);transition:width .6s var(--ease)}
+
+.rt-banner{
+  margin:0 20px 16px;
+  background:var(--rust-bg);border-radius:var(--r-md);
+  padding:14px 16px;display:none;
+  align-items:flex-start;gap:10px;
+  border:1px solid rgba(139,58,42,.15);
+  font-size:13px;color:var(--ink);line-height:1.5;
+}
+
+.rt-list{margin:0 20px;display:flex;flex-direction:column}
+.rt-item{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 0;border-bottom:1px solid var(--border-2);
+}
+.rt-time{
+  font-size:11px;color:var(--muted);
+  width:38px;flex-shrink:0;text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+.rt-check{
+  width:26px;height:26px;border-radius:50%;
+  border:1.5px solid var(--border);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all var(--t);
+}
+.rt-check:hover{border-color:var(--ink)}
+.rt-check.done{background:var(--ink);border-color:var(--ink)}
+.rt-title{font-size:14px;color:var(--ink);flex:1;font-weight:400}
+.rt-title.done{color:var(--muted);text-decoration:line-through}
+.rt-title.lite{font-size:13px;color:var(--muted)}
+.lite-tag{
+  font-size:10px;font-weight:500;
+  background:var(--gold-bg);color:var(--gold);
+  padding:2px 8px;border-radius:10px;flex-shrink:0;
+}
+.rt-del{color:var(--border);font-size:15px;cursor:pointer;padding:4px;transition:color var(--t)}
+.rt-del:hover{color:var(--rust)}
+
+/* ─── KONTRAK ────────────────────────────────────── */
+.kt-card{
+  margin:0 20px 14px;
+  border-radius:var(--r-lg);
+  border:1px solid var(--border);
+  overflow:hidden;background:var(--white);
+}
+.kt-head{
+  padding:18px 20px;
+  background:var(--ink);color:white;
+  display:flex;align-items:flex-start;gap:12px;
+}
+.kt-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:20px;font-weight:300;line-height:1.2;
+}
+.kt-meta{font-size:11px;opacity:.5;margin-top:4px}
+.kt-body{padding:18px 20px}
+.kt-promise{
+  font-family:'Cormorant Garamond',serif;
+  font-size:15px;font-style:italic;color:var(--ink-3);
+  line-height:1.6;margin-bottom:16px;
+  padding-bottom:16px;border-bottom:1px solid var(--border-2);
+}
+.kt-partner{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.av{
+  width:38px;height:38px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:500;color:white;flex-shrink:0;
+}
+.av-name{font-size:13px;font-weight:500;color:var(--ink)}
+.av-role{font-size:11px;color:var(--muted);margin-top:2px}
+.kt-streak{display:flex;gap:5px;margin:10px 0 14px}
+.kt-dot{
+  width:24px;height:24px;border-radius:50%;
+  background:var(--ink);
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;color:white;
+}
+.kt-dot.empty{background:var(--border-2)}
+.verify-btn{
+  width:100%;padding:14px;border-radius:var(--r-md);
+  background:var(--ink);color:white;
+  border:none;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:500;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:background var(--t),transform var(--t);
+}
+.verify-btn:hover{background:var(--ink-3)}
+.verify-btn:active{transform:scale(.98)}
+.verify-btn.verified{background:var(--sage-bg);color:var(--sage);cursor:default}
+
+/* ─── BOTTOM NAV ─────────────────────────────────── */
+.bnav{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:430px;
+  background:rgba(250,248,245,.92);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);
+  display:flex;padding:8px 0 22px;z-index:100;
+}
+.ni{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;gap:4px;cursor:pointer;
+  padding:4px 0;transition:opacity var(--t);
+}
+.ni i{font-size:22px;color:var(--border);transition:color var(--t)}
+.ni.active i{color:var(--ink)}
+.ni-label{
+  font-size:9px;font-weight:500;
+  color:var(--border);letter-spacing:.06em;text-transform:uppercase;
+  transition:color var(--t);
+}
+.ni.active .ni-label{color:var(--ink)}
+
+/* ─── FORMS ──────────────────────────────────────── */
+.fg{margin-bottom:16px}
+.fl{display:block;font-size:11px;font-weight:500;color:var(--muted);margin-bottom:6px;letter-spacing:.04em}
+.fi,.fsel,.fta{
+  width:100%;background:var(--paper-2);
+  border:1px solid var(--border);border-radius:var(--r-sm);
+  padding:12px 14px;font-family:'Outfit',sans-serif;
+  font-size:14px;color:var(--ink);outline:none;
+  transition:border-color var(--t),background var(--t);
+}
+.fi:focus,.fsel:focus,.fta:focus{
+  border-color:var(--ink);background:var(--white);
+}
+.fta{resize:vertical;min-height:80px;line-height:1.5}
+.frange{
+  -webkit-appearance:none;width:100%;height:3px;
+  border-radius:2px;background:var(--border);
+  outline:none;cursor:pointer;
+}
+.frange::-webkit-slider-thumb{
+  -webkit-appearance:none;width:22px;height:22px;
+  border-radius:50%;background:var(--ink);cursor:pointer;
+}
+
+/* ─── BUTTONS ────────────────────────────────────── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  border:none;cursor:pointer;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:500;border-radius:var(--r-md);
+  padding:13px 20px;transition:all var(--t);
+}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--ink);color:white;width:100%}
+.btn-primary:hover{background:var(--ink-3)}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--ink)}
+.btn-outline:hover{background:var(--paper-2)}
+.btn-gold{background:var(--gold);color:white;width:100%}
+.btn-gold:hover{background:var(--gold-2)}
+
+/* ─── MODAL ──────────────────────────────────────── */
+.overlay{
+  display:none;position:fixed;inset:0;z-index:200;
+  background:rgba(13,13,13,.5);
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  align-items:flex-end;justify-content:center;
+}
+.overlay.open{display:flex}
+.sheet{
+  width:100%;max-width:430px;
+  background:var(--white);
+  border-radius:24px 24px 0 0;
+  padding:20px 22px 40px;
+  animation:sheetUp .3s var(--ease) both;
+  max-height:90dvh;overflow-y:auto;
+}
+@keyframes sheetUp{
+  from{transform:translateY(100%);opacity:0}
+  to  {transform:translateY(0);opacity:1}
+}
+.sheet-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px}
+.sheet-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:24px;font-weight:300;margin-bottom:18px;
+}
+.sheet-actions{display:flex;gap:10px;margin-top:8px}
+
+/* ─── TOAST ──────────────────────────────────────── */
+.toast{
+  position:fixed;bottom:90px;left:50%;transform:translateX(-50%);
+  background:var(--ink);color:white;
+  padding:10px 22px;border-radius:24px;
+  font-size:13px;font-weight:400;
+  z-index:400;opacity:0;pointer-events:none;
+  white-space:nowrap;transition:opacity .25s;
+  box-shadow:0 4px 20px rgba(0,0,0,.2);
+}
+.toast.show{opacity:1}
+
+/* ─── EMPTY STATE ────────────────────────────────── */
+.empty{
+  text-align:center;padding:44px 20px;color:var(--muted);
+}
+.empty-ico{font-size:36px;margin-bottom:12px;opacity:.4}
+.empty-txt{font-size:13px;line-height:1.6;font-weight:300}
+
+/* ─── MISC ───────────────────────────────────────── */
+.px{padding-left:20px;padding-right:20px}
+.tip{
+  margin:14px 20px 0;
+  background:var(--plum-bg);border-radius:var(--r-md);
+  padding:14px 16px;border:1px solid rgba(92,61,107,.1);
+}
+.tip-label{
+  font-size:10px;font-weight:500;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--plum);margin-bottom:6px;
+  display:flex;align-items:center;gap:4px;
+}
+.tip-text{font-size:13px;color:var(--ink-3);line-height:1.6;font-weight:300}
+
+@media(max-width:430px){
+  #shell{box-shadow:none}
+  .bnav{max-width:100vw}
+}
+</style>
 </head>
 <body>
 
-<!-- ============================================================
-     ONBOARDING / SETUP
-     ============================================================ -->
-<div id="page-setup" style="display:none; flex-direction:column; min-height:100vh; background:var(--forest);">
-  <div class="setup-hero">
-    <div class="setup-logo">Eunoia<em>.</em></div>
-    <div class="setup-tagline">Manajemen diri yang adaptif.<br>Bukan sekadar to-do list.</div>
+<!-- ═══════════════════════════════════════
+     ONBOARDING
+══════════════════════════════════════════ -->
+<div id="page-setup" style="display:none;flex-direction:column;min-height:100dvh;background:var(--ink)">
+  <div class="setup-top">
+    <div class="logo-word">Eunoia<em>.</em></div>
+    <p class="setup-sub">Manajemen diri yang adaptif.<br>Bukan sekadar to-do list.</p>
   </div>
-
-  <div class="setup-form">
-    <h2 class="serif" style="font-size:22px; margin-bottom:6px">Hai, siapa namamu?</h2>
-    <p style="font-size:13px; color:var(--bark); margin-bottom:24px; line-height:1.5">
-      Aplikasi ini akan belajar dari kebiasaanmu dan menyesuaikan diri setiap hari.
+  <div class="setup-card">
+    <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:300;margin-bottom:4px">Siapa namamu?</h2>
+    <p style="font-size:13px;color:var(--muted);font-weight:300;line-height:1.5;margin-bottom:20px">
+      Eunoia akan belajar dari kebiasaanmu dan menyesuaikan diri setiap harinya.
     </p>
-
-    <div class="form-group">
-      <label class="form-label" for="setup-name">Nama panggilanmu</label>
-      <input class="form-input" id="setup-name" type="text" placeholder="contoh: Raka, Dina, Budi…"
-        onkeydown="if(event.key==='Enter') Modals.saveSetup()">
+    <div class="fg">
+      <label class="fl" for="setup-name">Nama panggilan</label>
+      <input class="fi" id="setup-name" type="text" placeholder="Raka, Dina, Budi…"
+        onkeydown="if(event.key==='Enter')saveSetup()">
     </div>
-
-    <div style="margin-top:8px; padding:14px; background:var(--cream); border-radius:var(--radius-md); margin-bottom:24px;">
-      <div class="label-upper" style="margin-bottom:8px">4 pilar aplikasi ini</div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-        <div style="font-size:12px; color:var(--deep)"><i class="ti ti-eye" style="color:var(--purple)" aria-hidden="true"></i> Cermin harian</div>
-        <div style="font-size:12px; color:var(--deep)"><i class="ti ti-bolt" style="color:var(--amber)" aria-hidden="true"></i> Energi manager</div>
-        <div style="font-size:12px; color:var(--deep)"><i class="ti ti-refresh" style="color:var(--coral)" aria-hidden="true"></i> Rutinitas cerdas</div>
-        <div style="font-size:12px; color:var(--deep)"><i class="ti ti-writing" style="color:var(--forest)" aria-hidden="true"></i> Kontrak diri</div>
+    <div class="setup-pillars">
+      <div class="setup-pillar">
+        <div class="setup-pillar-icon" style="background:var(--plum-bg)"><i class="ti ti-eye" style="color:var(--plum)" aria-hidden="true"></i></div>
+        <div class="setup-pillar-name">Cermin harian</div>
+        <div style="font-size:11px;color:var(--muted);font-weight:300">Refleksi & pola diri</div>
+      </div>
+      <div class="setup-pillar">
+        <div class="setup-pillar-icon" style="background:var(--gold-bg)"><i class="ti ti-bolt" style="color:var(--gold)" aria-hidden="true"></i></div>
+        <div class="setup-pillar-name">Energi manager</div>
+        <div style="font-size:11px;color:var(--muted);font-weight:300">Kelola kapasitasmu</div>
+      </div>
+      <div class="setup-pillar">
+        <div class="setup-pillar-icon" style="background:var(--rust-bg)"><i class="ti ti-refresh" style="color:var(--rust)" aria-hidden="true"></i></div>
+        <div class="setup-pillar-name">Rutinitas cerdas</div>
+        <div style="font-size:11px;color:var(--muted);font-weight:300">Adaptif setiap hari</div>
+      </div>
+      <div class="setup-pillar">
+        <div class="setup-pillar-icon" style="background:var(--sage-bg)"><i class="ti ti-writing" style="color:var(--sage)" aria-hidden="true"></i></div>
+        <div class="setup-pillar-name">Kontrak diri</div>
+        <div style="font-size:11px;color:var(--muted);font-weight:300">Komitmen nyata</div>
       </div>
     </div>
-
-    <button class="btn btn-primary" style="background:var(--forest);" onclick="Modals.saveSetup()">
+    <button class="btn btn-primary" onclick="saveSetup()">
       <i class="ti ti-arrow-right" aria-hidden="true"></i> Mulai perjalananku
     </button>
-
-    <p style="font-size:11px; color:var(--sand); text-align:center; margin-top:16px;">
-      Semua data tersimpan di perangkatmu · Gratis selamanya
+    <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:14px;font-weight:300">
+      Data tersimpan di perangkatmu · Gratis selamanya
     </p>
   </div>
 </div>
 
-<!-- ============================================================
-     MAIN APP SHELL
-     ============================================================ -->
-<div id="app" style="display:none; flex-direction:column; min-height:100vh;">
+<!-- ═══════════════════════════════════════
+     APP SHELL
+══════════════════════════════════════════ -->
+<div id="shell" style="display:none">
 
-  <!-- ===================== HOME ===================== -->
+  <!-- ── HOME ── -->
   <div class="page" id="page-home">
-    <div class="screen-header" style="padding-top:20px;">
-      <h1 class="page-title" id="home-greeting">Selamat pagi,<br><em>Teman</em></h1>
-      <p class="subtext" id="home-sub">Memuat…</p>
-    </div>
-
-    <!-- Streak week -->
-    <div class="streak-row" id="home-streak"></div>
-
-    <!-- Energy hero -->
-    <div style="margin-top:16px;">
-      <div class="energy-hero">
-        <div class="energy-label">Energi hari ini</div>
-        <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
-          <div class="energy-number" id="home-energy-num">—</div>
-          <div style="font-size:13px; opacity:.6;">/ 100</div>
-        </div>
-        <div class="energy-desc" id="home-energy-desc">Memuat…</div>
-        <div class="energy-bar-wrap"><div class="energy-bar" id="home-energy-bar" style="width:0%"></div></div>
+    <div style="padding:22px 24px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+      <div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;line-height:1.1" id="h-greeting">Selamat pagi,<br><em style="color:var(--sage)">Teman</em></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;font-weight:300" id="h-sub">—</div>
+      </div>
+      <div style="width:42px;height:42px;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center">
+        <i class="ti ti-leaf" style="font-size:18px;color:white" aria-hidden="true"></i>
       </div>
     </div>
 
-    <!-- Insight -->
-    <div style="margin-top:14px;">
-      <div class="insight-card">
+    <div class="streak-wrap" id="h-streak"></div>
+
+    <div style="margin-top:16px">
+      <div class="home-hero">
+        <div class="hero-label">Energi hari ini</div>
+        <div class="hero-energy" id="h-energy">—<sup>/100</sup></div>
+        <div class="hero-desc" id="h-edesc">Memuat…</div>
+        <div class="hero-bar-wrap"><div class="hero-bar" id="h-ebar" style="width:0%"></div></div>
+        <div class="hero-stats">
+          <div class="hero-stat"><strong id="h-streak-num">0</strong>hari streak</div>
+          <div class="hero-stat"><strong id="h-checkin-status">—</strong>check-in</div>
+          <div class="hero-stat"><strong id="h-contracts-num">0</strong>kontrak aktif</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin:16px 20px 0">
+      <div class="insight">
         <div class="insight-tag"><i class="ti ti-sparkles" aria-hidden="true"></i> Insight hari ini</div>
-        <div class="insight-text" id="home-insight-text">Memuat insight…</div>
-        <div class="insight-sub" id="home-insight-sub"></div>
+        <div class="insight-text" id="h-insight">Memuat…</div>
+        <div class="insight-sub" id="h-isub"></div>
       </div>
     </div>
 
-    <!-- Pillar mini cards -->
-    <div class="sec-title">Pilarmu hari ini</div>
-    <div class="scroll-row">
-      <div class="pillar-mini" onclick="Router.go('cermin')">
-        <div class="pillar-icon" style="background:var(--purple-light)">
-          <i class="ti ti-eye" style="color:var(--purple)" aria-hidden="true"></i>
-        </div>
+    <div class="sec">Pilarmu</div>
+    <div class="pillars-row">
+      <div class="pillar" onclick="go('cermin')">
+        <div class="pillar-ico" style="background:var(--plum-bg)"><i class="ti ti-eye" style="color:var(--plum)" aria-hidden="true"></i></div>
         <div class="pillar-name">Cermin</div>
-        <div class="pillar-status" id="ps-cermin">—</div>
+        <div class="pillar-val" id="ps-cermin">—</div>
       </div>
-      <div class="pillar-mini" onclick="Router.go('energi')">
-        <div class="pillar-icon" style="background:var(--amber-light)">
-          <i class="ti ti-bolt" style="color:var(--amber)" aria-hidden="true"></i>
-        </div>
+      <div class="pillar" onclick="go('energi')">
+        <div class="pillar-ico" style="background:var(--gold-bg)"><i class="ti ti-bolt" style="color:var(--gold)" aria-hidden="true"></i></div>
         <div class="pillar-name">Energi</div>
-        <div class="pillar-status" id="ps-energi">—</div>
+        <div class="pillar-val" id="ps-energi">—</div>
       </div>
-      <div class="pillar-mini" onclick="Router.go('rutinitas')">
-        <div class="pillar-icon" style="background:var(--coral-light)">
-          <i class="ti ti-refresh" style="color:var(--coral)" aria-hidden="true"></i>
-        </div>
+      <div class="pillar" onclick="go('rutinitas')">
+        <div class="pillar-ico" style="background:var(--rust-bg)"><i class="ti ti-refresh" style="color:var(--rust)" aria-hidden="true"></i></div>
         <div class="pillar-name">Rutinitas</div>
-        <div class="pillar-status" id="ps-rutinitas">—</div>
+        <div class="pillar-val" id="ps-rutinitas">—</div>
       </div>
-      <div class="pillar-mini" onclick="Router.go('kontrak')">
-        <div class="pillar-icon" style="background:var(--info-bg)">
-          <i class="ti ti-writing" style="color:var(--forest)" aria-hidden="true"></i>
-        </div>
+      <div class="pillar" onclick="go('kontrak')">
+        <div class="pillar-ico" style="background:var(--sage-bg)"><i class="ti ti-writing" style="color:var(--sage)" aria-hidden="true"></i></div>
         <div class="pillar-name">Kontrak</div>
-        <div class="pillar-status" id="ps-kontrak">—</div>
+        <div class="pillar-val" id="ps-kontrak">—</div>
       </div>
     </div>
 
-    <!-- Quick check-in -->
-    <div class="sec-title">Akses cepat</div>
-    <div class="prompt-list" style="margin-bottom:8px;">
-      <div class="prompt-item" onclick="Router.go('cermin')">
-        <div class="prompt-dot" style="background:var(--purple)"></div>
-        <div class="prompt-text">Isi check-in pagi hari ini</div>
-        <i class="ti ti-chevron-right" style="font-size:14px; color:var(--sand)" aria-hidden="true"></i>
+    <div class="sec">Akses cepat</div>
+    <div class="qa-list" style="margin-bottom:8px">
+      <div class="qa" onclick="go('cermin')">
+        <div class="qa-dot" style="background:var(--plum)"></div>
+        <div class="qa-text">Isi check-in pagi hari ini</div>
+        <i class="ti ti-chevron-right" class="qa-arr" style="color:var(--border);font-size:14px" aria-hidden="true"></i>
       </div>
-      <div class="prompt-item" onclick="Modals.openAddActivity(); Router.go('energi')">
-        <div class="prompt-dot" style="background:var(--amber)"></div>
-        <div class="prompt-text">Tambah aktivitas ke tracker energi</div>
-        <i class="ti ti-chevron-right" style="font-size:14px; color:var(--sand)" aria-hidden="true"></i>
+      <div class="qa" onclick="go('energi');openActModal()">
+        <div class="qa-dot" style="background:var(--gold)"></div>
+        <div class="qa-text">Tambah aktivitas ke energi tracker</div>
+        <i class="ti ti-chevron-right" class="qa-arr" style="color:var(--border);font-size:14px" aria-hidden="true"></i>
       </div>
-      <div class="prompt-item" onclick="Modals.openAddContract(); Router.go('kontrak')">
-        <div class="prompt-dot" style="background:var(--forest)"></div>
-        <div class="prompt-text">Buat kontrak diri baru</div>
-        <i class="ti ti-chevron-right" style="font-size:14px; color:var(--sand)" aria-hidden="true"></i>
+      <div class="qa" onclick="go('kontrak');openKtModal()">
+        <div class="qa-dot" style="background:var(--sage)"></div>
+        <div class="qa-text">Buat kontrak diri baru</div>
+        <i class="ti ti-chevron-right" class="qa-arr" style="color:var(--border);font-size:14px" aria-hidden="true"></i>
       </div>
     </div>
   </div>
 
-  <!-- ===================== CERMIN ===================== -->
+  <!-- ── CERMIN ── -->
   <div class="page" id="page-cermin">
-    <div class="top-bar">
-      <button class="back-btn" onclick="Router.go('home')">
-        <i class="ti ti-arrow-left" aria-hidden="true"></i> Beranda
-      </button>
-      <span style="font-size:12px; color:var(--bark);" id="cermin-time"></span>
+    <div class="topnav">
+      <button class="back-btn" onclick="go('home')"><i class="ti ti-arrow-left" aria-hidden="true"></i> Beranda</button>
+      <span class="page-badge">Cermin harian</span>
     </div>
-    <div class="screen-header">
-      <h1 class="page-title" style="font-size:24px;">Cermin <em>harian</em></h1>
-      <p class="subtext">Refleksi diri · 3 pertanyaan · ~2 menit</p>
+    <div class="scr-head">
+      <div class="scr-title">Refleksi <em>pagi</em></div>
+      <div class="scr-sub">3 pertanyaan · sekitar 2 menit</div>
     </div>
-
-    <div class="reflection-list">
-
-      <!-- Mood -->
+    <div class="q-cards">
       <div class="q-card">
         <div class="q-label">Perasaan</div>
-        <div class="q-text">Bagaimana kondisi fisik dan mentalmu saat ini?</div>
-        <div class="mood-row">
-          <button class="mood-btn" aria-label="Sangat buruk">😔</button>
-          <button class="mood-btn" aria-label="Kurang baik">😕</button>
-          <button class="mood-btn" aria-label="Biasa saja">😐</button>
-          <button class="mood-btn" aria-label="Cukup baik">🙂</button>
-          <button class="mood-btn" aria-label="Luar biasa">😄</button>
+        <div class="q-question">Bagaimana kondisi fisik dan mentalmu saat ini?</div>
+        <div class="moods">
+          <button class="mood" data-mood="1" aria-label="Sangat buruk">😔</button>
+          <button class="mood" data-mood="2" aria-label="Kurang baik">😕</button>
+          <button class="mood" data-mood="3" aria-label="Biasa">😐</button>
+          <button class="mood" data-mood="4" aria-label="Baik">🙂</button>
+          <button class="mood" data-mood="5" aria-label="Luar biasa">😄</button>
         </div>
       </div>
-
-      <!-- Sleep -->
       <div class="q-card">
         <div class="q-label">Tidur</div>
-        <div class="q-text">Semalam kamu tidur berapa jam?</div>
-        <input type="range" class="form-range" id="cermin-sleep" min="3" max="11" step="0.5" value="7">
-        <div class="slider-labels">
+        <div class="q-question">Semalam kamu tidur berapa jam?</div>
+        <input type="range" class="sl" id="c-sleep" min="3" max="11" step=".5" value="7"
+          oninput="document.getElementById('c-sleep-val').textContent=this.value+' jam'">
+        <div class="sl-labels">
           <span>3 jam</span>
-          <span id="cermin-sleep-val" style="color:var(--deep); font-weight:500;">7 jam</span>
+          <span id="c-sleep-val" style="color:var(--ink);font-weight:500">7 jam</span>
           <span>11 jam</span>
         </div>
       </div>
-
-      <!-- Note -->
       <div class="q-card">
-        <div class="q-label">Catatan bebas (opsional)</div>
-        <div class="q-text" style="font-size:15px; margin-bottom:10px;">Ada yang ingin kamu catat?</div>
-        <textarea class="form-textarea" id="cermin-note" placeholder="Pikiran, rencana, atau apapun yang kamu rasakan hari ini…"></textarea>
+        <div class="q-label">Catatan bebas</div>
+        <div class="q-question" style="font-size:17px;margin-bottom:10px">Ada yang ingin kamu catat hari ini?</div>
+        <textarea class="fta" id="c-note" placeholder="Pikiran, rencana, atau apapun yang kamu rasakan…"></textarea>
       </div>
-
-      <!-- Patterns -->
-      <div class="q-card" style="background:var(--purple-light); border-color:rgba(107,91,138,0.2);">
-        <div class="q-label" style="color:var(--purple);">Pola terdeteksi</div>
-        <div class="pattern-wrap" id="cermin-patterns">
-          <span style="font-size:13px; color:var(--bark);">Isi check-in beberapa hari untuk melihat polamu.</span>
+      <div class="q-card" style="background:var(--plum-bg);border-color:rgba(92,61,107,.15)">
+        <div class="q-label" style="color:var(--plum)">Pola terdeteksi</div>
+        <div class="chips" id="c-patterns">
+          <span style="font-size:13px;color:var(--muted);font-weight:300">Isi check-in beberapa hari untuk melihat polamu.</span>
         </div>
       </div>
-
-      <!-- Save -->
-      <button class="btn btn-primary" id="cermin-save-btn" onclick="Modals.saveCermin()" style="margin:0 0 8px;">
+      <button class="btn btn-primary" id="c-save-btn" onclick="saveCermin()" style="margin:0 0 8px">
         <i class="ti ti-check" aria-hidden="true"></i> Simpan check-in
       </button>
     </div>
   </div>
 
-  <!-- ===================== ENERGI ===================== -->
+  <!-- ── ENERGI ── -->
   <div class="page" id="page-energi">
-    <div class="top-bar">
-      <button class="back-btn" onclick="Router.go('home')">
-        <i class="ti ti-arrow-left" aria-hidden="true"></i> Beranda
-      </button>
+    <div class="topnav">
+      <button class="back-btn" onclick="go('home')"><i class="ti ti-arrow-left" aria-hidden="true"></i> Beranda</button>
+      <span class="page-badge">Energi manager</span>
     </div>
-    <div class="screen-header">
-      <h1 class="page-title" style="font-size:24px;">Energi <em>manager</em></h1>
-      <p class="subtext">Kelola energi, bukan cuma waktu</p>
+    <div class="scr-head">
+      <div class="scr-title">Peta <em>energimu</em></div>
+      <div class="scr-sub">Kelola energi, bukan cuma waktu</div>
     </div>
-
-    <!-- Energy summary -->
-    <div style="margin:0 20px;">
-      <div class="energy-hero" style="padding:16px;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-          <div>
-            <div class="energy-label">Skor energi sekarang</div>
-            <div style="font-family:'DM Serif Display',serif; font-size:40px; color:white; margin-top:2px; line-height:1;">
-              <span id="energi-score">—</span><span style="font-size:16px; opacity:.6;"> /100</span>
-            </div>
-          </div>
-          <div style="text-align:right; font-size:12px; opacity:.8; line-height:1.8;">
-            <div>Drain: <span id="energi-drains">0</span></div>
-            <div>Restore: <span id="energi-restores">0</span></div>
-            <div style="font-weight:500;">Total: <span id="energi-total">—</span></div>
-          </div>
-        </div>
-        <div class="energy-bar-wrap" style="margin-top:12px;">
-          <div class="energy-bar" id="energi-bar" style="width:0%"></div>
-        </div>
+    <div class="e-hero">
+      <div style="font-size:10px;opacity:.5;letter-spacing:.1em;text-transform:uppercase">Skor sekarang</div>
+      <div class="e-score"><span id="e-score">—</span><span> /100</span></div>
+      <div class="e-grid">
+        <div class="e-stat"><div class="e-stat-label">Drain</div><div class="e-stat-val" id="e-drain">0</div></div>
+        <div class="e-stat"><div class="e-stat-label">Restore</div><div class="e-stat-val" id="e-restore">+0</div></div>
       </div>
     </div>
-
-    <!-- Add activity -->
-    <div style="padding:0 20px; margin-top:14px;">
-      <button class="btn btn-outline" style="width:100%;" onclick="Modals.openAddActivity()">
+    <div style="padding:0 20px;margin-top:14px">
+      <button class="btn btn-outline" style="width:100%" onclick="openActModal()">
         <i class="ti ti-plus" aria-hidden="true"></i> Tambah aktivitas
       </button>
     </div>
-
-    <div class="sec-title">Aktivitas hari ini</div>
-    <div class="activity-list" id="energi-list" style="margin-bottom:8px;"></div>
-
-    <!-- Tip -->
-    <div style="margin:14px 20px 0; background:var(--purple-light); border-radius:var(--radius-md); padding:12px 14px; border:1px solid rgba(107,91,138,0.15);">
-      <div style="font-size:10px; font-weight:500; color:var(--purple); text-transform:uppercase; letter-spacing:.06em; margin-bottom:5px;">
-        <i class="ti ti-bulb" aria-hidden="true"></i> Tips
-      </div>
-      <div style="font-size:13px; color:var(--deep); line-height:1.5;">
-        Aktivitas yang <span style="color:var(--info-fg); font-weight:500;">memulihkan</span> energi: olahraga ringan, membaca, meditasi, tidur siang.
-        Aktivitas yang <span style="color:var(--coral); font-weight:500;">menguras</span>: rapat panjang, multitasking, konflik interpersonal.
+    <div class="sec">Aktivitas hari ini</div>
+    <div class="act-list" id="e-list" style="margin-bottom:8px"></div>
+    <div class="tip">
+      <div class="tip-label"><i class="ti ti-bulb" aria-hidden="true"></i> Tips energi</div>
+      <div class="tip-text">
+        <strong style="color:var(--sage)">Memulihkan:</strong> olahraga ringan, membaca, meditasi, tidur siang, alam terbuka.<br>
+        <strong style="color:var(--rust)">Menguras:</strong> rapat panjang, multitasking, konflik, scrolling berlebihan.
       </div>
     </div>
   </div>
 
-  <!-- ===================== RUTINITAS ===================== -->
+  <!-- ── RUTINITAS ── -->
   <div class="page" id="page-rutinitas">
-    <div class="top-bar">
-      <button class="back-btn" onclick="Router.go('home')">
-        <i class="ti ti-arrow-left" aria-hidden="true"></i> Beranda
-      </button>
+    <div class="topnav">
+      <button class="back-btn" onclick="go('home')"><i class="ti ti-arrow-left" aria-hidden="true"></i> Beranda</button>
+      <span class="page-badge">Rutinitas cerdas</span>
     </div>
-    <div class="screen-header">
-      <div style="display:flex; align-items:center; justify-content:space-between;">
-        <div>
-          <h1 class="page-title" style="font-size:24px;">Rutinitas <em>cerdas</em></h1>
-          <p class="subtext" id="rutinitas-progress">0 / 0 selesai</p>
-        </div>
-      </div>
-      <!-- Progress bar -->
-      <div style="margin-top:10px; background:var(--stone); border-radius:3px; height:4px;">
-        <div id="rutinitas-bar" style="height:4px; border-radius:3px; background:var(--forest); width:0%; transition:width .6s ease;"></div>
-      </div>
+    <div class="scr-head">
+      <div class="scr-title">Hari <em>ini</em></div>
+      <div class="scr-sub" id="rt-sub">0 / 0 selesai</div>
     </div>
-
-    <!-- Context banner (lite mode) -->
-    <div id="rutinitas-banner" style="display:none; margin:0 20px 14px; background:var(--coral-light); border-radius:var(--radius-md); padding:12px 14px; align-items:flex-start; gap:10px; border:1px solid rgba(196,96,74,0.2); font-size:13px; color:var(--deep); line-height:1.4;"></div>
-
-    <!-- Add routine -->
-    <div style="padding:0 20px; margin-bottom:14px;">
-      <button class="btn btn-outline" style="width:100%;" onclick="Modals.openAddRoutine()">
+    <div class="rt-progress">
+      <div class="rt-prog-header">
+        <span class="rt-prog-title">Progress</span>
+        <span class="rt-prog-val" id="rt-prog-val">0%</span>
+      </div>
+      <div class="rt-prog-bar"><div class="rt-prog-fill" id="rt-prog-fill" style="width:0%"></div></div>
+    </div>
+    <div class="rt-banner" id="rt-banner"></div>
+    <div style="padding:0 20px;margin-bottom:14px">
+      <button class="btn btn-outline" style="width:100%" onclick="openRtModal()">
         <i class="ti ti-plus" aria-hidden="true"></i> Tambah rutinitas
       </button>
     </div>
-
-    <div class="routine-list" id="rutinitas-list"></div>
-
-    <!-- Reset hint -->
-    <div style="padding:16px 20px; font-size:12px; color:var(--sand); text-align:center;">
-      Rutinitas direset otomatis setiap hari tengah malam
+    <div class="rt-list" id="rt-list"></div>
+    <div style="padding:16px 20px;font-size:11px;color:var(--muted);text-align:center;font-weight:300">
+      Rutinitas direset otomatis setiap tengah malam
     </div>
   </div>
 
-  <!-- ===================== KONTRAK ===================== -->
+  <!-- ── KONTRAK ── -->
   <div class="page" id="page-kontrak">
-    <div class="top-bar">
-      <button class="back-btn" onclick="Router.go('home')">
-        <i class="ti ti-arrow-left" aria-hidden="true"></i> Beranda
-      </button>
+    <div class="topnav">
+      <button class="back-btn" onclick="go('home')"><i class="ti ti-arrow-left" aria-hidden="true"></i> Beranda</button>
+      <span class="page-badge">Kontrak diri</span>
     </div>
-    <div class="screen-header">
-      <h1 class="page-title" style="font-size:24px;">Kontrak <em>diri</em></h1>
-      <p class="subtext">Komitmen dengan akuntabilitas nyata</p>
+    <div class="scr-head">
+      <div class="scr-title">Komitmen <em>aktif</em></div>
+      <div class="scr-sub">Akuntabilitas yang nyata, bukan sekadar janji</div>
     </div>
-
-    <!-- Add contract -->
-    <div style="padding:0 20px; margin-bottom:16px;">
-      <button class="btn btn-primary" onclick="Modals.openAddContract()">
+    <div style="padding:0 20px;margin-bottom:16px">
+      <button class="btn btn-primary" onclick="openKtModal()">
         <i class="ti ti-plus" aria-hidden="true"></i> Buat kontrak baru
       </button>
     </div>
-
-    <div id="kontrak-list" style="margin-bottom:8px;"></div>
+    <div id="kt-list" style="margin-bottom:8px"></div>
   </div>
 
-  <!-- ============================================================
-       BOTTOM NAV
-       ============================================================ -->
-  <nav class="bottom-nav" aria-label="Navigasi utama">
-    <div class="nav-item active" id="nav-home" onclick="Router.go('home')" role="button" tabindex="0" aria-label="Beranda">
-      <i class="ti ti-home" aria-hidden="true"></i>
-      <span class="nav-label">Beranda</span>
+  <!-- ── BOTTOM NAV ── -->
+  <nav class="bnav" aria-label="Navigasi">
+    <div class="ni active" id="ni-home" onclick="go('home')" role="button" tabindex="0">
+      <i class="ti ti-home" aria-hidden="true"></i><span class="ni-label">Beranda</span>
     </div>
-    <div class="nav-item" id="nav-cermin" onclick="Router.go('cermin')" role="button" tabindex="0" aria-label="Cermin harian">
-      <i class="ti ti-eye" aria-hidden="true"></i>
-      <span class="nav-label">Cermin</span>
+    <div class="ni" id="ni-cermin" onclick="go('cermin')" role="button" tabindex="0">
+      <i class="ti ti-eye" aria-hidden="true"></i><span class="ni-label">Cermin</span>
     </div>
-    <div class="nav-item" id="nav-energi" onclick="Router.go('energi')" role="button" tabindex="0" aria-label="Energi manager">
-      <i class="ti ti-bolt" aria-hidden="true"></i>
-      <span class="nav-label">Energi</span>
+    <div class="ni" id="ni-energi" onclick="go('energi')" role="button" tabindex="0">
+      <i class="ti ti-bolt" aria-hidden="true"></i><span class="ni-label">Energi</span>
     </div>
-    <div class="nav-item" id="nav-rutinitas" onclick="Router.go('rutinitas')" role="button" tabindex="0" aria-label="Rutinitas cerdas">
-      <i class="ti ti-refresh" aria-hidden="true"></i>
-      <span class="nav-label">Rutinitas</span>
+    <div class="ni" id="ni-rutinitas" onclick="go('rutinitas')" role="button" tabindex="0">
+      <i class="ti ti-refresh" aria-hidden="true"></i><span class="ni-label">Rutinitas</span>
     </div>
-    <div class="nav-item" id="nav-kontrak" onclick="Router.go('kontrak')" role="button" tabindex="0" aria-label="Kontrak diri">
-      <i class="ti ti-writing" aria-hidden="true"></i>
-      <span class="nav-label">Kontrak</span>
+    <div class="ni" id="ni-kontrak" onclick="go('kontrak')" role="button" tabindex="0">
+      <i class="ti ti-writing" aria-hidden="true"></i><span class="ni-label">Kontrak</span>
     </div>
   </nav>
+</div>
 
-</div><!-- /#app -->
-
-<!-- ============================================================
-     MODAL: TAMBAH AKTIVITAS
-     ============================================================ -->
-<div class="modal-overlay" id="modal-activity" role="dialog" aria-modal="true" aria-labelledby="modal-act-title">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <h2 class="modal-title" id="modal-act-title">Tambah Aktivitas</h2>
-
-    <div class="form-group">
-      <label class="form-label" for="act-name-input">Nama aktivitas</label>
-      <input class="form-input" id="act-name-input" type="text" placeholder="contoh: Olahraga, Rapat, Meditasi…">
-    </div>
-
-    <div class="form-group">
-      <label class="form-label" for="act-duration-input">Durasi (opsional)</label>
-      <input class="form-input" id="act-duration-input" type="text" placeholder="contoh: 30 menit, 1 jam…">
-    </div>
-
-    <div class="form-group">
-      <label class="form-label" for="act-type-select">Tipe aktivitas</label>
-      <select class="form-select" id="act-type-select">
+<!-- ═══ MODAL: AKTIVITAS ════════════════════════════ -->
+<div class="overlay" id="m-act" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Tambah Aktivitas</div>
+    <div class="fg"><label class="fl">Nama aktivitas</label><input class="fi" id="a-name" type="text" placeholder="Olahraga, Rapat, Meditasi…"></div>
+    <div class="fg"><label class="fl">Durasi (opsional)</label><input class="fi" id="a-dur" type="text" placeholder="30 menit, 1 jam…"></div>
+    <div class="fg">
+      <label class="fl">Tipe</label>
+      <select class="fsel" id="a-type" onchange="updActSign()">
         <option value="restore">😊 Memulihkan energi</option>
         <option value="drain">😓 Menguras energi</option>
         <option value="neutral">😐 Netral</option>
       </select>
     </div>
-
-    <div class="form-group">
-      <label class="form-label">Seberapa besar dampaknya? <span id="act-energy-display" style="font-weight:600;">0</span></label>
-      <input type="range" class="form-range" id="act-energy-input" min="0" max="30" value="10">
-      <div class="slider-labels"><span>Kecil</span><span>Besar</span></div>
+    <div class="fg">
+      <label class="fl">Dampak energi: <strong id="a-edisplay">+10</strong></label>
+      <input type="range" class="frange" id="a-energy" min="0" max="30" value="10" oninput="updActSign()">
+      <div class="sl-labels"><span>Kecil</span><span>Besar</span></div>
     </div>
-
-    <div style="display:flex; gap:10px; margin-top:4px;">
-      <button class="btn btn-outline" style="flex:1;" onclick="Modals.close('modal-activity')">Batal</button>
-      <button class="btn btn-primary" style="flex:2;" onclick="Modals.saveActivity()">
-        <i class="ti ti-plus" aria-hidden="true"></i> Tambahkan
-      </button>
+    <div class="sheet-actions">
+      <button class="btn btn-outline" style="flex:1" onclick="closeModal('m-act')">Batal</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveActivity()"><i class="ti ti-plus" aria-hidden="true"></i> Tambah</button>
     </div>
   </div>
 </div>
 
-<!-- ============================================================
-     MODAL: TAMBAH RUTINITAS
-     ============================================================ -->
-<div class="modal-overlay" id="modal-routine" role="dialog" aria-modal="true" aria-labelledby="modal-rt-title">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <h2 class="modal-title" id="modal-rt-title">Tambah Rutinitas</h2>
-
-    <div class="form-group">
-      <label class="form-label" for="rt-title-input">Nama rutinitas</label>
-      <input class="form-input" id="rt-title-input" type="text" placeholder="contoh: Olahraga pagi, Membaca, Meditasi…">
+<!-- ═══ MODAL: RUTINITAS ════════════════════════════ -->
+<div class="overlay" id="m-rt" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Tambah Rutinitas</div>
+    <div class="fg"><label class="fl">Nama rutinitas</label><input class="fi" id="rt-name" type="text" placeholder="Olahraga pagi, Membaca…"></div>
+    <div class="fg"><label class="fl">Jam</label><input class="fi" id="rt-time" type="time" value="07:00"></div>
+    <div class="fg"><label class="fl">Energi (positif = pulih, negatif = kuras)</label><input class="fi" id="rt-energy" type="number" placeholder="contoh: 10 atau -15"></div>
+    <div class="fg">
+      <label class="fl">Versi Lite (opsional)</label>
+      <input class="fi" id="rt-lite" type="text" placeholder="Versi lebih ringan saat kondisi kurang fit…">
+      <div style="font-size:11px;color:var(--muted);margin-top:5px;font-weight:300">Aktif otomatis saat energi atau mood rendah.</div>
     </div>
-
-    <div class="form-group">
-      <label class="form-label" for="rt-time-input">Jam pelaksanaan</label>
-      <input class="form-input" id="rt-time-input" type="time" value="07:00">
+    <div class="sheet-actions">
+      <button class="btn btn-outline" style="flex:1" onclick="closeModal('m-rt')">Batal</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveRoutine()"><i class="ti ti-plus" aria-hidden="true"></i> Tambah</button>
     </div>
+  </div>
+</div>
 
-    <div class="form-group">
-      <label class="form-label" for="rt-energy-input">Energi yang dipulihkan/digunakan</label>
-      <input class="form-input" id="rt-energy-input" type="number" placeholder="contoh: 10 (pulihkan) atau -15 (kuras)">
+<!-- ═══ MODAL: KONTRAK ══════════════════════════════ -->
+<div class="overlay" id="m-kt" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Buat Kontrak Diri</div>
+    <div class="fg"><label class="fl">Judul komitmen</label><input class="fi" id="kt-title" type="text" placeholder="Tidur sebelum jam 23.00…"></div>
+    <div class="fg"><label class="fl">Tuliskan janjimu</label><textarea class="fta" id="kt-promise" placeholder="Saya berkomitmen untuk… karena…"></textarea></div>
+    <div class="fg"><label class="fl">Accountability partner (opsional)</label><input class="fi" id="kt-partner" type="text" placeholder="Nama teman atau keluarga"></div>
+    <div class="fg"><label class="fl">Durasi (hari)</label><input class="fi" id="kt-dur" type="number" value="30" min="1" max="365"></div>
+    <div class="sheet-actions">
+      <button class="btn btn-outline" style="flex:1" onclick="closeModal('m-kt')">Batal</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveContract()"><i class="ti ti-writing" aria-hidden="true"></i> Buat</button>
     </div>
+  </div>
+</div>
 
-    <div class="form-group">
-      <label class="form-label" for="rt-lite-input">Versi Lite (opsional)</label>
-      <input class="form-input" id="rt-lite-input" type="text" placeholder="Versi lebih ringan saat kondisi kurang fit…">
-      <div style="font-size:11px; color:var(--bark); margin-top:5px;">
-        Versi ini akan aktif otomatis saat energi atau mood rendah.
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════
+// STORE
+// ════════════════════════════════════════
+const S={
+  g(k,f=null){try{const v=localStorage.getItem('p_'+k);return v?JSON.parse(v):f}catch{return f}},
+  s(k,v){try{localStorage.setItem('p_'+k,JSON.stringify(v))}catch{}},
+  profile(){return this.g('profile',{name:'',done:false})},
+  saveProfile(d){this.s('profile',d)},
+  today(){return new Date().toISOString().slice(0,10)},
+  checkin(d){return this.g('ci_'+(d||this.today()),null)},
+  saveCheckin(d){this.s('ci_'+this.today(),{...d,date:this.today()})},
+  activities(d){return this.g('ac_'+(d||this.today()),[])},
+  saveActivities(l){this.s('ac_'+this.today(),l)},
+  addActivity(a){const l=this.activities();l.push({...a,id:Date.now()});this.saveActivities(l);return l},
+  delActivity(id){const l=this.activities().filter(a=>a.id!==id);this.saveActivities(l);return l},
+  routines(){return this.g('rt',[
+    {id:1,time:'06:30',title:'Bangun & minum air putih',energy:5,lite:false,done:false},
+    {id:2,time:'07:00',title:'Olahraga pagi',energy:15,lite:true,liteTitle:'Stretching 5 menit',done:false},
+    {id:3,time:'08:00',title:'Sarapan bergizi',energy:10,lite:false,done:false},
+    {id:4,time:'09:00',title:'Fokus kerja utama',energy:-20,lite:true,liteTitle:'Kerja 45 menit',done:false},
+    {id:5,time:'12:00',title:'Istirahat makan siang',energy:10,lite:false,done:false},
+    {id:6,time:'15:00',title:'Jalan kaki singkat',energy:8,lite:true,liteTitle:'Jalan 5 menit',done:false},
+    {id:7,time:'21:00',title:'Wind-down & baca buku',energy:12,lite:false,done:false},
+    {id:8,time:'22:30',title:'Tidur',energy:20,lite:false,done:false},
+  ])},
+  saveRoutines(l){this.s('rt',l)},
+  addRoutine(r){const l=this.routines();l.push({...r,id:Date.now(),done:false});l.sort((a,b)=>a.time.localeCompare(b.time));this.saveRoutines(l);return l},
+  toggleRoutine(id){const l=this.routines().map(r=>r.id===id?{...r,done:!r.done}:r);this.saveRoutines(l);return l},
+  delRoutine(id){const l=this.routines().filter(r=>r.id!==id);this.saveRoutines(l);return l},
+  resetRoutines(){this.saveRoutines(this.routines().map(r=>({...r,done:false})))},
+  contracts(){return this.g('kt',[])},
+  addContract(c){const l=this.contracts();l.push({...c,id:Date.now(),startDate:this.today(),verifications:[]});this.s('kt',l);return l},
+  verifyContract(id){const l=this.contracts().map(c=>{if(c.id!==id)return c;const v=[...(c.verifications||[])];const t=this.today();if(!v.includes(t))v.push(t);return{...c,verifications:v}});this.s('kt',l);return l},
+  delContract(id){const l=this.contracts().filter(c=>c.id!==id);this.s('kt',l);return l},
+  streak(){let n=0;for(let i=0;i<60;i++){const d=new Date();d.setDate(d.getDate()-i);if(this.g('ci_'+d.toISOString().slice(0,10)))n++;else break}return n},
+  last7(){const days=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=d.toISOString().slice(0,10);days.push({key:k,label:['Min','Sen','Sel','Rab','Kam','Jum','Sab'][d.getDay()],done:!!this.g('ci_'+k),isToday:i===0})}return days},
+  energyScore(){const acts=this.activities();const ci=this.checkin();let base=80;if(ci){const sl=ci.sleep||7;base=Math.min(100,Math.round(40+sl*7+(ci.mood||3)*4))}const delta=acts.reduce((s,a)=>s+(a.energy||0),0);return Math.max(0,Math.min(100,base+delta))},
+  liteMode(){const ci=this.checkin();if(!ci)return false;return(ci.sleep||7)<6||(ci.mood||3)<=2},
+  insight(){const streak=this.streak();const ci=this.checkin();if(!ci)return{text:'Isi check-in pagi ini untuk mendapatkan insight personal.',sub:'Butuh kurang dari 2 menit'};const sl=ci.sleep||7,m=ci.mood||3;if(sl<6&&m<=2)return{text:'Tidur kurang & mood rendah. Prioritaskan istirahat hari ini.',sub:'Mode lite diaktifkan'};if(sl>=8&&m>=4)return{text:'Kondisi prima! Kerjakan tugas paling menantangmu sekarang.',sub:`Streak ${streak} hari berturut-turut 🔥`};if(streak>=7)return{text:`${streak} hari berturut-turut — konsistensimu luar biasa.`,sub:'Terus pertahankan momentum ini'};if(m<=2)return{text:'Mood sedang kurang baik. Jadwal sudah disesuaikan untukmu.',sub:'Kamu tetap melangkah maju 💪'};return{text:'Kondisimu cukup baik hari ini. Fokus pada 1–2 hal penting.',sub:`Energi tersisa: ${this.energyScore()}/100`}}
+};
+
+// ════════════════════════════════════════
+// ROUTER
+// ════════════════════════════════════════
+function go(p){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(el=>el.classList.remove('active'));
+  const pg=document.getElementById('page-'+p);if(pg)pg.classList.add('active');
+  const ni=document.getElementById('ni-'+p);if(ni)ni.classList.add('active');
+  if(p==='home')renderHome();
+  if(p==='cermin')renderCermin();
+  if(p==='energi')renderEnergi();
+  if(p==='rutinitas')renderRutinitas();
+  if(p==='kontrak')renderKontrak();
+}
+
+// ════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+// ════════════════════════════════════════
+// HOME
+// ════════════════════════════════════════
+function renderHome(){
+  const p=S.profile();const st=S.streak();const e=S.energyScore();
+  const ins=S.insight();const days=S.last7();const ci=S.checkin();
+  const h=new Date().getHours();
+  const gr=h<12?'pagi':h<17?'siang':'malam';
+  document.getElementById('h-greeting').innerHTML=`Selamat ${gr},<br><em style="color:var(--sage)">${p.name||'Teman'}</em>`;
+  const mn=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+  const dn=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  const nd=new Date();
+  document.getElementById('h-sub').textContent=`${dn[nd.getDay()]}, ${nd.getDate()} ${mn[nd.getMonth()]} · ${st>0?'Hari ke-'+st+' streak':'Mulai streak hari ini!'}`;
+  document.getElementById('h-streak').innerHTML=days.map(d=>`
+    <div class="s-day"><div class="s-dot ${d.isToday?'today':d.done?'done':'miss'}">${d.isToday?st||'·':d.done?'✓':''}</div><div class="s-label">${d.label}</div></div>`).join('');
+  document.getElementById('h-energy').innerHTML=`${e}<sup>/100</sup>`;
+  document.getElementById('h-ebar').style.width=e+'%';
+  document.getElementById('h-edesc').textContent=e>=80?'Kondisi prima — hari yang produktif menunggumu!':e>=60?'Cukup baik — jadwal sudah disesuaikan':e>=40?'Agak lelah — fokus pada 1–2 hal penting':'Energi rendah — istirahat lebih dulu';
+  document.getElementById('h-streak-num').textContent=st;
+  document.getElementById('h-checkin-status').textContent=ci?'✓':'—';
+  document.getElementById('h-contracts-num').textContent=S.contracts().length;
+  document.getElementById('h-insight').textContent=ins.text;
+  document.getElementById('h-isub').textContent=ins.sub;
+  document.getElementById('ps-cermin').textContent=ci?'✓ Selesai':'Belum diisi';
+  document.getElementById('ps-energi').textContent=e+' / 100';
+  document.getElementById('ps-rutinitas').textContent=S.liteMode()?'Lite mode ✦':'Normal';
+  document.getElementById('ps-kontrak').textContent=S.contracts().length?S.contracts().length+' aktif':'Buat kontrak';
+}
+
+// ════════════════════════════════════════
+// CERMIN
+// ════════════════════════════════════════
+function renderCermin(){
+  const ci=S.checkin();
+  if(ci){
+    document.getElementById('c-sleep').value=ci.sleep||7;
+    document.getElementById('c-sleep-val').textContent=(ci.sleep||7)+' jam';
+    document.getElementById('c-note').value=ci.note||'';
+    document.querySelectorAll('.mood').forEach(b=>{b.classList.toggle('on',+b.dataset.mood===(ci.mood||0))});
+    document.getElementById('c-save-btn').innerHTML='<i class="ti ti-check"></i> Perbarui check-in';
+  }
+  // Patterns
+  const week=[];
+  for(let i=1;i<=7;i++){const d=new Date();d.setDate(d.getDate()-i);const c=S.checkin(d.toISOString().slice(0,10));if(c)week.push(c);}
+  const pat=[];
+  if(week.length>=2){
+    const avgSl=week.reduce((s,c)=>s+(c.sleep||7),0)/week.length;
+    const avgM=week.reduce((s,c)=>s+(c.mood||3),0)/week.length;
+    if(avgSl<6.5)pat.push({icon:'ti-moon',t:'Rata-rata tidur < 6.5 jam'});
+    if(avgSl>=7.5)pat.push({icon:'ti-moon',t:'Tidur cukup minggu ini!'});
+    if(avgM>=4)pat.push({icon:'ti-sun',t:'Mood umumnya positif'});
+    if(avgM<=2)pat.push({icon:'ti-cloud',t:'Mood kurang — jaga dirimu'});
+    if(week.length>=5)pat.push({icon:'ti-calendar-check',t:week.length+' hari konsisten!'});
+  }
+  document.getElementById('c-patterns').innerHTML=pat.length
+    ?pat.map(p=>`<span class="chip"><i class="ti ${p.icon}"></i> ${p.t}</span>`).join('')
+    :'<span style="font-size:13px;color:var(--muted);font-weight:300">Isi check-in beberapa hari untuk melihat polamu.</span>';
+}
+function saveCermin(){
+  const mood=+([...document.querySelectorAll('.mood')].find(b=>b.classList.contains('on'))?.dataset.mood||0);
+  const sleep=parseFloat(document.getElementById('c-sleep').value||7);
+  const note=document.getElementById('c-note').value.trim();
+  if(!mood){toast('Pilih mood dulu ya!');return;}
+  S.saveCheckin({mood,sleep,note});
+  renderCermin();renderHome();
+  toast('✓ Check-in tersimpan!');
+}
+
+// ════════════════════════════════════════
+// ENERGI
+// ════════════════════════════════════════
+function renderEnergi(){
+  const score=S.energyScore();const acts=S.activities();
+  document.getElementById('e-score').textContent=score;
+  const drain=acts.filter(a=>a.energy<0).reduce((s,a)=>s+a.energy,0);
+  const restore=acts.filter(a=>a.energy>0).reduce((s,a)=>s+a.energy,0);
+  document.getElementById('e-drain').textContent=drain;
+  document.getElementById('e-restore').textContent='+'+restore;
+  const list=document.getElementById('e-list');
+  if(!acts.length){list.innerHTML=`<div class="empty"><div class="empty-ico">⚡</div><div class="empty-txt">Belum ada aktivitas hari ini.<br>Tambahkan untuk melacak energimu.</div></div>`;return;}
+  list.innerHTML=acts.map(a=>{
+    const pc=a.energy>0?'ep-restore':a.energy<0?'ep-drain':'ep-neutral';
+    const bg=a.energy>0?'var(--sage-bg)':a.energy<0?'var(--rust-bg)':'var(--border-2)';
+    const ic=a.energy>0?'var(--sage)':a.energy<0?'var(--rust)':'var(--muted)';
+    return`<div class="act">
+      <div class="act-ico" style="background:${bg}"><i class="ti ${a.icon}" style="color:${ic}" aria-hidden="true"></i></div>
+      <div class="act-info"><div class="act-name">${a.name}</div><div class="act-dur">${a.duration||''}</div></div>
+      <span class="epill ${pc}">${a.energy>0?'+':''}${a.energy}</span>
+      <span class="act-del" onclick="delAct(${a.id})"><i class="ti ti-x" aria-hidden="true"></i></span>
+    </div>`;
+  }).join('');
+}
+function delAct(id){S.delActivity(id);renderEnergi();renderHome();toast('Aktivitas dihapus');}
+function openActModal(){
+  document.getElementById('a-name').value='';
+  document.getElementById('a-dur').value='';
+  document.getElementById('a-energy').value=10;
+  document.getElementById('a-type').value='restore';
+  updActSign();
+  openModal('m-act');
+}
+function updActSign(){
+  const type=document.getElementById('a-type').value;
+  const raw=+document.getElementById('a-energy').value;
+  const val=type==='drain'?-raw:raw;
+  document.getElementById('a-edisplay').textContent=(val>0?'+':'')+val;
+  document.getElementById('a-edisplay').style.color=val>0?'var(--sage)':val<0?'var(--rust)':'var(--muted)';
+}
+function saveActivity(){
+  const name=document.getElementById('a-name').value.trim();
+  const duration=document.getElementById('a-dur').value.trim();
+  const type=document.getElementById('a-type').value;
+  const raw=+document.getElementById('a-energy').value;
+  const energy=type==='drain'?-raw:raw;
+  if(!name){toast('Isi nama aktivitas!');return;}
+  const icons={restore:'ti-heart',drain:'ti-device-laptop',neutral:'ti-minus'};
+  S.addActivity({name,duration,energy,icon:icons[type]||'ti-circle'});
+  closeModal('m-act');renderEnergi();renderHome();
+  toast('✓ Aktivitas ditambahkan!');
+}
+
+// ════════════════════════════════════════
+// RUTINITAS
+// ════════════════════════════════════════
+function renderRutinitas(){
+  const rt=S.routines();const lite=S.liteMode();
+  const done=rt.filter(r=>r.done).length;const total=rt.length;
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById('rt-sub').textContent=`${done} / ${total} selesai`;
+  document.getElementById('rt-prog-val').textContent=pct+'%';
+  document.getElementById('rt-prog-fill').style.width=pct+'%';
+  const banner=document.getElementById('rt-banner');
+  if(lite){
+    const ci=S.checkin();const r=[];
+    if(ci?.sleep<6)r.push('tidur kurang');if(ci?.mood<=2)r.push('mood rendah');
+    banner.style.display='flex';
+    banner.innerHTML=`<i class="ti ti-info-circle" style="color:var(--rust);font-size:18px;flex-shrink:0" aria-hidden="true"></i><div>Kondisi hari ini: <strong>${r.join(' + ')}</strong> — <strong>Mode Lite aktif.</strong> Rutinitas disederhanakan. Kamu tetap maju! 💪</div>`;
+  }else{banner.style.display='none';}
+  const list=document.getElementById('rt-list');
+  if(!rt.length){list.innerHTML=`<div class="empty"><div class="empty-ico">📋</div><div class="empty-txt">Belum ada rutinitas.<br>Tambahkan aktivitas harianmu!</div></div>`;return;}
+  list.innerHTML=rt.map(r=>{
+    const title=lite&&r.lite&&r.liteTitle?r.liteTitle:r.title;
+    const isLite=lite&&r.lite&&r.liteTitle;
+    return`<div class="rt-item">
+      <div class="rt-time">${r.time}</div>
+      <div class="rt-check ${r.done?'done':''}" onclick="toggleRt(${r.id})">
+        ${r.done?'<i class="ti ti-check" style="font-size:11px;color:white" aria-hidden="true"></i>':''}
       </div>
-    </div>
+      <div class="rt-title ${r.done?'done':''} ${isLite?'lite':''}">${title}</div>
+      ${isLite?'<span class="lite-tag">Lite</span>':''}
+      <span class="rt-del" onclick="delRt(${r.id})"><i class="ti ti-x" aria-hidden="true"></i></span>
+    </div>`;
+  }).join('');
+}
+function toggleRt(id){S.toggleRoutine(id);renderRutinitas();}
+function delRt(id){S.delRoutine(id);renderRutinitas();toast('Rutinitas dihapus');}
+function openRtModal(){
+  document.getElementById('rt-name').value='';
+  document.getElementById('rt-time').value='07:00';
+  document.getElementById('rt-energy').value='';
+  document.getElementById('rt-lite').value='';
+  openModal('m-rt');
+}
+function saveRoutine(){
+  const title=document.getElementById('rt-name').value.trim();
+  const time=document.getElementById('rt-time').value;
+  const energy=parseInt(document.getElementById('rt-energy').value)||0;
+  const liteTitle=document.getElementById('rt-lite').value.trim();
+  if(!title){toast('Isi nama rutinitas!');return;}
+  S.addRoutine({title,time,energy,lite:!!liteTitle,liteTitle});
+  closeModal('m-rt');renderRutinitas();
+  toast('✓ Rutinitas ditambahkan!');
+}
 
-    <div style="display:flex; gap:10px; margin-top:4px;">
-      <button class="btn btn-outline" style="flex:1;" onclick="Modals.close('modal-routine')">Batal</button>
-      <button class="btn btn-primary" style="flex:2;" onclick="Modals.saveRoutine()">
-        <i class="ti ti-plus" aria-hidden="true"></i> Tambahkan
-      </button>
-    </div>
-  </div>
-</div>
+// ════════════════════════════════════════
+// KONTRAK
+// ════════════════════════════════════════
+function renderKontrak(){
+  const cts=S.contracts();
+  const list=document.getElementById('kt-list');
+  if(!cts.length){list.innerHTML=`<div class="empty"><div class="empty-ico">📜</div><div class="empty-txt">Belum ada kontrak diri.<br>Buat komitmen pertamamu!</div></div>`;return;}
+  const avColors=['#3A5A4A','#6B5B8A','#C4882A','#8B3A2A','#2C6B8A'];
+  list.innerHTML=cts.map(c=>{
+    const start=new Date(c.startDate),today=new Date();
+    const daysDiff=Math.floor((today-start)/86400000)+1;
+    const daysLeft=Math.max(0,c.duration-daysDiff+1);
+    const verifs=c.verifications||[];
+    const verified=verifs.includes(S.today());
+    const dots=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);dots.push(verifs.includes(d.toISOString().slice(0,10)));}
+    const col=avColors[Math.abs(c.id)%avColors.length];
+    const ini=(c.partner||'P').split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+    return`<div class="kt-card">
+      <div class="kt-head">
+        <i class="ti ti-writing" style="font-size:18px;flex-shrink:0;margin-top:3px" aria-hidden="true"></i>
+        <div style="flex:1"><div class="kt-title">${c.title}</div><div class="kt-meta">Mulai ${c.startDate} · ${daysLeft} hari tersisa</div></div>
+        <span onclick="delContract(${c.id})" style="cursor:pointer;opacity:.5;font-size:18px" title="Hapus"><i class="ti ti-x" aria-hidden="true"></i></span>
+      </div>
+      <div class="kt-body">
+        <div class="kt-promise">"${c.promise}"</div>
+        ${c.partner?`<div class="kt-partner">
+          <div class="av" style="background:${col}">${ini}</div>
+          <div><div class="av-name">${c.partner}</div><div class="av-role">Accountability partner</div></div>
+          <i class="ti ti-check-circle" style="color:var(--sage);font-size:18px;margin-left:auto" aria-hidden="true"></i>
+        </div>`:''}
+        <div style="font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">7 hari terakhir</div>
+        <div class="kt-streak">${dots.map(d=>`<div class="kt-dot ${d?'':'empty'}">${d?'<i class="ti ti-check" style="font-size:10px" aria-hidden="true"></i>':''}</div>`).join('')}</div>
+        <div style="font-size:11px;color:var(--muted);margin:6px 0 14px;font-weight:300">${verifs.length} hari terverifikasi dari ${daysDiff} hari</div>
+        <button class="verify-btn ${verified?'verified':''}" onclick="${verified?'':('verifyC('+c.id+')')}" ${verified?'disabled':''}>
+          <i class="ti ${verified?'ti-check':'ti-camera'}" aria-hidden="true"></i>
+          ${verified?'Sudah terverifikasi hari ini':'Verifikasi hari ini'}
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function verifyC(id){S.verifyContract(id);renderKontrak();toast('✓ Verifikasi berhasil!');}
+function delContract(id){if(!confirm('Hapus kontrak ini?'))return;S.delContract(id);renderKontrak();toast('Kontrak dihapus');}
+function openKtModal(){
+  document.getElementById('kt-title').value='';
+  document.getElementById('kt-promise').value='';
+  document.getElementById('kt-partner').value='';
+  document.getElementById('kt-dur').value=30;
+  openModal('m-kt');
+}
+function saveContract(){
+  const title=document.getElementById('kt-title').value.trim();
+  const promise=document.getElementById('kt-promise').value.trim();
+  const partner=document.getElementById('kt-partner').value.trim();
+  const duration=+document.getElementById('kt-dur').value||30;
+  if(!title){toast('Isi judul kontrak!');return;}
+  if(!promise){toast('Tulis janjimu!');return;}
+  S.addContract({title,promise,partner,duration});
+  closeModal('m-kt');renderKontrak();renderHome();
+  toast('✓ Kontrak dibuat!');
+}
 
-<!-- ============================================================
-     MODAL: BUAT KONTRAK
-     ============================================================ -->
-<div class="modal-overlay" id="modal-contract" role="dialog" aria-modal="true" aria-labelledby="modal-kt-title">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <h2 class="modal-title" id="modal-kt-title">Buat Kontrak Diri</h2>
+// ════════════════════════════════════════
+// MODAL HELPERS
+// ════════════════════════════════════════
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
 
-    <div class="form-group">
-      <label class="form-label" for="kt-title-input">Judul komitmen</label>
-      <input class="form-input" id="kt-title-input" type="text" placeholder="contoh: Tidur sebelum jam 23.00">
-    </div>
+// ════════════════════════════════════════
+// SETUP
+// ════════════════════════════════════════
+function saveSetup(){
+  const name=document.getElementById('setup-name').value.trim();
+  if(!name){toast('Masukkan namamu dulu!');return;}
+  S.saveProfile({name,done:true});
+  document.getElementById('page-setup').style.display='none';
+  document.getElementById('shell').style.display='flex';
+  go('home');toast('Selamat datang, '+name+'! 🌱');
+}
 
-    <div class="form-group">
-      <label class="form-label" for="kt-promise-input">Tuliskan janjimu</label>
-      <textarea class="form-textarea" id="kt-promise-input"
-        placeholder="Saya berkomitmen untuk… karena…"></textarea>
-    </div>
+// ════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',()=>{
+  const p=S.profile();
+  if(!p.done){
+    document.getElementById('page-setup').style.display='flex';
+    document.getElementById('shell').style.display='none';
+  }else{
+    document.getElementById('page-setup').style.display='none';
+    document.getElementById('shell').style.display='flex';
+    go('home');
+  }
 
-    <div class="form-group">
-      <label class="form-label" for="kt-partner-input">Accountability partner (opsional)</label>
-      <input class="form-input" id="kt-partner-input" type="text" placeholder="Nama teman atau keluarga yang tahu komitmenmu">
-    </div>
+  // Close modals on overlay click
+  document.querySelectorAll('.overlay').forEach(o=>{
+    o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');});
+  });
 
-    <div class="form-group">
-      <label class="form-label" for="kt-duration-input">Durasi (hari)</label>
-      <input class="form-input" id="kt-duration-input" type="number" min="1" max="365" value="30">
-    </div>
+  // Mood buttons
+  document.querySelectorAll('.mood').forEach(b=>{
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('.mood').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');
+    });
+  });
 
-    <div style="display:flex; gap:10px; margin-top:4px;">
-      <button class="btn btn-outline" style="flex:1;" onclick="Modals.close('modal-contract')">Batal</button>
-      <button class="btn btn-primary" style="flex:2;" onclick="Modals.saveContract()">
-        <i class="ti ti-writing" aria-hidden="true"></i> Buat Kontrak
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- Scripts -->
-<script src="store.js"></script>
-<script src="app.js"></script>
-<script src="modals.js"></script>
-
+  // Reset routines at midnight
+  const last=localStorage.getItem('p_last_date');
+  const td=S.today();
+  if(last&&last!==td)S.resetRoutines();
+  localStorage.setItem('p_last_date',td);
+});
+</script>
 </body>
 </html>

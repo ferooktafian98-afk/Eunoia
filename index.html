@@ -298,6 +298,88 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .lang-toggle{display:flex;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:3px;}
 .lang-btn{padding:4px 10px;border-radius:7px;border:none;background:transparent;color:var(--text2);font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:.15s;}
 .lang-btn.active{background:var(--accent);color:white;}
+
+/* WELCOME MODAL */
+.welcome-overlay{position:fixed;inset:0;background:rgba(0,5,15,0.92);backdrop-filter:blur(18px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;}
+.welcome-overlay.hidden{display:none;}
+.welcome-card{background:var(--surface);border:1px solid rgba(14,165,233,0.3);border-radius:28px;padding:32px 24px;width:100%;max-width:420px;text-align:center;}
+.welcome-logo{width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 18px;box-shadow:0 0 36px rgba(14,165,233,0.5);}
+.welcome-card h2{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;margin-bottom:8px;background:linear-gradient(135deg,#7dd3fc,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.welcome-card p{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:22px;}
+.welcome-card input{width:100%;background:rgba(14,165,233,0.06);border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;color:var(--text);font-size:15px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:14px;text-align:center;}
+.welcome-card input:focus{border-color:var(--accent);}
+.welcome-start-btn{width:100%;padding:15px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:white;font-weight:700;font-size:15px;font-family:'DM Sans',sans-serif;cursor:pointer;box-shadow:0 6px 24px rgba(14,165,233,0.35);}
+
+/* MOOD TRACKER */
+.mood-tracker-card{background:linear-gradient(145deg,rgba(240,192,64,0.1),rgba(14,165,233,0.07));border:1px solid rgba(240,192,64,0.2);border-radius:22px;padding:18px 20px;margin-bottom:18px;}
+.mood-tracker-label{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--gold);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.mood-emoji-row{display:flex;justify-content:space-between;gap:6px;}
+.mood-btn{flex:1;padding:10px 4px;border:1.5px solid var(--border);border-radius:12px;background:transparent;font-size:20px;cursor:pointer;transition:.2s;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.mood-btn .mood-num{font-size:9px;color:var(--text3);font-weight:700;}
+.mood-btn.selected{border-color:var(--gold);background:rgba(240,192,64,0.12);transform:scale(1.08);}
+.mood-btn:active{transform:scale(.93);}
+.mood-today-show{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);margin-top:10px;}
+.mood-today-show .mt-val{font-size:20px;}
+
+/* AFIRMASI CHECKPOINT */
+.afirmasi-card{background:linear-gradient(145deg,rgba(52,211,153,0.1),rgba(6,182,212,0.07));border:2px solid rgba(52,211,153,0.25);border-radius:22px;padding:18px 20px;margin-bottom:18px;position:relative;overflow:hidden;}
+.afirmasi-card::before{content:'';position:absolute;width:180px;height:180px;background:radial-gradient(circle,rgba(52,211,153,0.1),transparent 70%);top:-60px;right:-40px;border-radius:50%;}
+.afirmasi-card.completed{border-color:rgba(52,211,153,0.5);background:linear-gradient(145deg,rgba(52,211,153,0.15),rgba(6,182,212,0.1));}
+.afirmasi-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.afirmasi-label{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--success);display:flex;align-items:center;gap:6px;}
+.afirmasi-badge{font-size:10px;background:rgba(52,211,153,0.15);color:var(--success);border:1px solid rgba(52,211,153,0.3);padding:3px 10px;border-radius:20px;font-weight:700;letter-spacing:0.5px;}
+.afirmasi-textarea{width:100%;background:rgba(0,0,0,0.2);border:1.5px solid rgba(52,211,153,0.2);border-radius:12px;padding:12px 14px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;resize:none;outline:none;line-height:1.7;margin-bottom:10px;}
+.afirmasi-textarea:focus{border-color:var(--success);}
+.afirmasi-textarea::placeholder{color:var(--text3);}
+.afirmasi-submit-btn{width:100%;padding:12px;border:none;border-radius:12px;background:linear-gradient(135deg,#10b981,#34d399);color:white;font-weight:700;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;box-shadow:0 4px 16px rgba(52,211,153,0.3);transition:.18s;}
+.afirmasi-submit-btn:active{transform:scale(.97);}
+.afirmasi-done-show{display:flex;align-items:flex-start;gap:10px;padding:12px;background:rgba(52,211,153,0.08);border-radius:12px;}
+.afirmasi-done-check{width:28px;height:28px;border-radius:8px;background:var(--success);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:2px;}
+.afirmasi-done-text{font-size:13px;color:var(--text2);line-height:1.7;font-style:italic;}
+.afirmasi-edit-btn{background:transparent;border:none;color:var(--text3);font-size:11px;font-weight:600;cursor:pointer;margin-top:6px;text-decoration:underline;}
+
+/* MEDICINE REMINDER */
+.medicine-card{background:linear-gradient(145deg,rgba(248,113,113,0.1),rgba(14,165,233,0.05));border:1.5px solid rgba(248,113,113,0.25);border-radius:22px;padding:18px 20px;margin-bottom:18px;}
+.medicine-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.medicine-label{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--danger);display:flex;align-items:center;gap:6px;}
+.medicine-time-row{display:flex;align-items:center;gap:10px;}
+.medicine-time-display{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--text);}
+.medicine-name-text{font-size:12px;color:var(--text2);margin-top:2px;}
+.medicine-taken-btn{padding:10px 18px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--danger),#fb7185);color:white;font-weight:700;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:.2s;box-shadow:0 4px 14px rgba(248,113,113,0.28);}
+.medicine-taken-btn.taken{background:linear-gradient(135deg,var(--success),#6ee7b7);box-shadow:0 4px 14px rgba(52,211,153,0.28);}
+.medicine-countdown{font-size:12px;color:var(--text2);margin-top:8px;display:flex;align-items:center;gap:5px;}
+.medicine-countdown .mc-time{font-weight:700;color:var(--warning);}
+
+/* DOCTOR SCHEDULE */
+.doctor-card{background:linear-gradient(145deg,rgba(6,182,212,0.1),rgba(14,165,233,0.07));border:1.5px solid rgba(6,182,212,0.2);border-radius:22px;padding:18px 20px;margin-bottom:18px;}
+.doctor-label{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--accent3);display:flex;align-items:center;gap:6px;margin-bottom:12px;}
+.doctor-schedule-row{display:flex;align-items:center;gap:10px;}
+.doctor-date-input{flex:1;background:rgba(6,182,212,0.06);border:1.5px solid rgba(6,182,212,0.2);border-radius:12px;padding:10px 12px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;}
+.doctor-date-input:focus{border-color:var(--accent3);}
+.doctor-save-btn{padding:10px 16px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--accent3),var(--accent));color:white;font-weight:700;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;}
+.doctor-next-show{background:rgba(6,182,212,0.08);border-radius:12px;padding:12px;margin-top:10px;display:flex;align-items:center;gap:10px;}
+.doctor-next-icon{font-size:24px;}
+.doctor-next-info .dn-date{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--accent2);}
+.doctor-next-info .dn-countdown{font-size:12px;color:var(--text2);margin-top:2px;}
+
+/* EXPORT REMINDER NOTE */
+.export-note{background:rgba(14,165,233,0.06);border:1px solid rgba(14,165,233,0.15);border-radius:14px;padding:12px 16px;margin-bottom:12px;font-size:12px;color:var(--text2);line-height:1.65;}
+
+/* ANALYTICS EMPTY STATE */
+.analytics-empty{text-align:center;padding:24px;color:var(--text3);}
+.analytics-empty .ae-icon{font-size:36px;margin-bottom:10px;}
+.analytics-empty p{font-size:13px;line-height:1.6;}
+
+/* JOURNAL MOOD FILTER */
+.journal-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:14px;}
+.journal-card h3{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:12px;color:var(--accent2);}
+.mood-scale-select{display:flex;gap:6px;margin-bottom:10px;}
+.ms-btn{flex:1;padding:8px 4px;border:1.5px solid var(--border);border-radius:10px;background:transparent;font-size:16px;cursor:pointer;transition:.2s;text-align:center;}
+.ms-btn.sel{border-color:var(--gold);background:rgba(240,192,64,0.1);}
+.journal-textarea{width:100%;background:rgba(14,165,233,0.04);border:1px solid var(--border);border-radius:12px;padding:12px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;resize:none;outline:none;line-height:1.7;margin-bottom:10px;}
+.journal-textarea:focus{border-color:var(--accent);}
+.journal-textarea::placeholder{color:var(--text3);}
+
 </style>
 </head>
 <body>
@@ -331,6 +413,77 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
     </div>
   </div>
+
+  <!-- MOOD TRACKER -->
+  <div class="mood-tracker-card" id="moodTrackerCard">
+    <div class="mood-tracker-label">🌈 Bagaimana Perasaanmu Hari Ini?</div>
+    <div class="mood-emoji-row" id="moodEmojiRow">
+      <button class="mood-btn" onclick="setMood(1,'😞')" data-mood="1"><span>😞</span><span class="mood-num">1</span></button>
+      <button class="mood-btn" onclick="setMood(2,'😕')" data-mood="2"><span>😕</span><span class="mood-num">2</span></button>
+      <button class="mood-btn" onclick="setMood(3,'😐')" data-mood="3"><span>😐</span><span class="mood-num">3</span></button>
+      <button class="mood-btn" onclick="setMood(4,'🙂')" data-mood="4"><span>🙂</span><span class="mood-num">4</span></button>
+      <button class="mood-btn" onclick="setMood(5,'😄')" data-mood="5"><span>😄</span><span class="mood-num">5</span></button>
+    </div>
+    <div id="moodTodayShow" style="display:none;" class="mood-today-show">
+      <span class="mt-val" id="moodTodayEmoji"></span>
+      <span id="moodTodayText"></span>
+    </div>
+  </div>
+
+  <!-- AFIRMASI HARIAN - WAJIB -->
+  <div class="afirmasi-card" id="afirmasiCard">
+    <div class="afirmasi-header">
+      <div class="afirmasi-label">🌿 Afirmasi Positif Harianku</div>
+      <span class="afirmasi-badge">WAJIB SETIAP HARI</span>
+    </div>
+    <div id="afirmasiInputArea">
+      <textarea class="afirmasi-textarea" id="afirmasiInput" rows="3" placeholder="Tulis afirmasi positifmu hari ini... Contoh: Aku kuat, aku layak dicintai, aku sedang berkembang ♥"></textarea>
+      <button class="afirmasi-submit-btn" onclick="submitAfirmasi()">✅ Simpan Afirmasiku Hari Ini</button>
+    </div>
+    <div id="afirmasiDoneArea" style="display:none;">
+      <div class="afirmasi-done-show">
+        <div class="afirmasi-done-check">✓</div>
+        <div>
+          <div id="afirmasiDoneText" class="afirmasi-done-text"></div>
+          <button class="afirmasi-edit-btn" onclick="editAfirmasi()">Edit afirmasi</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PENGINGAT MINUM OBAT -->
+  <div class="medicine-card">
+    <div class="medicine-header">
+      <div class="medicine-label">💊 Pengingat Minum Obat</div>
+    </div>
+    <div class="medicine-time-row">
+      <div>
+        <div class="medicine-time-display" id="medTimeDisplay">20:00</div>
+        <div class="medicine-name-text" id="medNameText">Amitriptyline</div>
+      </div>
+      <div style="margin-left:auto;">
+        <button class="medicine-taken-btn" id="medTakenBtn" onclick="toggleMedicineTaken()">💊 Tandai Sudah Minum</button>
+      </div>
+    </div>
+    <div class="medicine-countdown" id="medCountdown"></div>
+  </div>
+
+  <!-- JADWAL DOKTER -->
+  <div class="doctor-card">
+    <div class="doctor-label">🏥 Jadwal Kontrol Dokter</div>
+    <div class="doctor-schedule-row">
+      <input type="date" class="doctor-date-input" id="doctorDateInput">
+      <button class="doctor-save-btn" onclick="saveDoctorSchedule()">💾 Simpan</button>
+    </div>
+    <div id="doctorNextShow" style="display:none;" class="doctor-next-show">
+      <span class="doctor-next-icon">🏥</span>
+      <div class="doctor-next-info">
+        <div class="dn-date" id="doctorNextDate"></div>
+        <div class="dn-countdown" id="doctorNextCountdown"></div>
+      </div>
+    </div>
+  </div>
+
   <div class="stats-row">
     <div class="stat-card"><div class="sv sg" id="st-done">0</div><div class="sl" data-id="stat-done">Selesai</div></div>
     <div class="stat-card"><div class="sv so">🔥<span id="st-streak">0</span></div><div class="sl">Streak</div></div>
@@ -398,6 +551,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   <div class="tab-row">
     <button class="tab-btn active" onclick="switchGoalTab('goals',this)">🎯 Goals</button>
     <button class="tab-btn" onclick="switchGoalTab('diary',this)">📖 Diary</button>
+    <button class="tab-btn" onclick="switchGoalTab('journal',this)">🌿 Jurnal</button>
   </div>
   <div id="goals-tab">
     <div class="goal-add-card">
@@ -429,6 +583,27 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <div class="sec-head" style="margin-bottom:10px;"><h2 data-id="saved-diary">Diary Tersimpan</h2></div>
     <div class="diary-list" id="diaryList"></div>
   </div>
+
+  <div id="journal-tab" style="display:none;">
+    <div class="journal-card">
+      <h3>🌿 Jurnal Perasaan Harian</h3>
+      <div class="mood-scale-select" id="journalMoodScale">
+        <button class="ms-btn" onclick="selJournalMood(1,'😞',this)">😞<br><span style="font-size:9px">1</span></button>
+        <button class="ms-btn" onclick="selJournalMood(2,'😕',this)">😕<br><span style="font-size:9px">2</span></button>
+        <button class="ms-btn" onclick="selJournalMood(3,'😐',this)">😐<br><span style="font-size:9px">3</span></button>
+        <button class="ms-btn" onclick="selJournalMood(4,'🙂',this)">🙂<br><span style="font-size:9px">4</span></button>
+        <button class="ms-btn" onclick="selJournalMood(5,'😄',this)">😄<br><span style="font-size:9px">5</span></button>
+      </div>
+      <textarea class="journal-textarea" id="journalSituasi" rows="2" placeholder="Situasi apa yang terjadi hari ini?"></textarea>
+      <textarea class="journal-textarea" id="journalPerasaan" rows="2" placeholder="Apa yang kamu rasakan? (sedih, cemas, senang, lelah...)"></textarea>
+      <textarea class="journal-textarea" id="journalPikiran" rows="2" placeholder="Apa yang ada di pikiranmu?"></textarea>
+      <textarea class="journal-textarea" id="journalSyukur" rows="2" placeholder="Hal apa yang kamu syukuri hari ini?"></textarea>
+      <button class="save-btn" onclick="addJournal()">🌿 Simpan Jurnal Perasaan</button>
+    </div>
+    <div class="sec-head" style="margin-bottom:10px;"><h2>Jurnal Tersimpan</h2></div>
+    <div class="diary-list" id="journalList"></div>
+  </div>
+
 </div>
 
 <!-- EXPORT -->
@@ -436,6 +611,9 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   <div class="export-hero">
     <h1>📤 Export Center</h1>
     <p data-id="export-sub">Download laporan habit, history, goals dan diary dalam format profesional siap presentasi.</p>
+  </div>
+  <div class="export-note">
+    ⚠️ <strong>Backup Data Penting:</strong> Data tersimpan di browser (localStorage). Rutin export Excel/PDF untuk mencegah kehilangan data saat ganti HP atau hapus cache. Tunjukkan laporan ini ke dokter saat kontrol! 💚
   </div>
   <div class="exp-sec">
     <h3 data-id="choose-period">Pilih Periode</h3>
@@ -473,10 +651,22 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <div class="menu-item" onclick="resetStreak()"><div class="mi-icon mi-yw">🔥</div><div class="mi-label" data-id="reset-streak">Reset Streak</div><div class="mi-arrow">›</div></div>
     <div class="menu-item" onclick="resetHabits()"><div class="mi-icon mi-cy">🔄</div><div class="mi-label" data-id="reset-habits">Reset Status Habit</div><div class="mi-arrow">›</div></div>
     <div class="menu-item" onclick="clearAll()"><div class="mi-icon mi-rd">🗑️</div><div class="mi-label" data-id="clear-data">Hapus Semua Data</div><div class="mi-arrow">›</div></div>
-    <div class="menu-item"><div class="mi-icon mi-gn">ℹ️</div><div class="mi-label">Eunoia v1.0 — Beautiful Mind</div><div class="mi-arrow"></div></div>
+    <div class="menu-item"><div class="mi-icon mi-gn">ℹ️</div><div class="mi-label">Eunoia v2.0 — Beautiful Mind</div><div class="mi-arrow"></div></div>
   </div>
 </div>
 </div><!-- /app -->
+
+
+<!-- WELCOME MODAL -->
+<div class="welcome-overlay hidden" id="welcomeOverlay">
+  <div class="welcome-card">
+    <div class="welcome-logo">✦</div>
+    <h2>Selamat Datang di Eunoia</h2>
+    <p>Aplikasi pendamping perjalananmu menuju kesehatan mental yang lebih baik. ♥<br>Siapa nama kamu?</p>
+    <input type="text" id="welcomeNameInput" placeholder="Tulis namamu di sini..." maxlength="40" onkeydown="if(event.key==='Enter')startApp()">
+    <button class="welcome-start-btn" onclick="startApp()">✨ Mulai Perjalananku</button>
+  </div>
+</div>
 
 <div class="bottom-nav">
   <div class="nav-item active" onclick="showPage('home',this)"><div class="nav-icon">🏠</div><div class="nav-label" data-id="nav-home">Home</div><div class="nav-dot"></div></div>
@@ -650,19 +840,28 @@ const QUOTES={
 };
 
 const DEFAULT_HABITS=[
-  {title:'Doa Pagi',cat:'Spiritual',done:false},
+  {title:'Doa Pagi & Malam',cat:'Spiritual',done:false},
   {title:'Sholat 5 Waktu',cat:'Spiritual',done:false},
-  {title:'Olahraga 30 menit',cat:'Kesehatan',done:false},
-  {title:'Minum 8 gelas air',cat:'Kesehatan',done:false},
-  {title:'Baca Buku 20 menit',cat:'Produktif',done:false},
-  {title:'Afirmasi Positif',cat:'Mental',done:false},
+  {title:'Mandi',cat:'Kesehatan',done:false},
+  {title:'Olahraga',cat:'Kesehatan',done:false},
+  {title:'Istirahat Cukup',cat:'Kesehatan',done:false},
+  {title:'Minum Obat (Amitriptyline)',cat:'Kesehatan',done:false},
+  {title:'Menulis Jurnal Perasaan',cat:'Mental',done:false},
+  {title:'Baca Buku / Me Time',cat:'Mental',done:false},
 ];
 
 let S={
-  habits:[],goals:[],diary:[],history:[],
-  streak:0,userName:'Eunoia User',
+  habits:[],goals:[],diary:[],history:[],journals:[],
+  streak:0,userName:'',
   lang:'id',goalPeriod:'Mingguan',exportPeriod:'Harian',
   openCats:{Spiritual:true,Kesehatan:true,Produktif:true,Mental:false,Sosial:false},
+  moodToday:{date:'',mood:0,emoji:''},
+  afirmasiToday:{date:'',text:''},
+  medicineTaken:{date:'',taken:false},
+  medicineTime:'20:00',
+  medicineName:'Amitriptyline',
+  doctorSchedule:'',
+  journalMoodSel:{mood:3,emoji:'😐'},
 };
 
 function t(k){return (T[S.lang]||T.id)[k]||k;}
@@ -681,8 +880,24 @@ function init(){
   const sv=localStorage.getItem('eunoia1');
   if(sv){try{Object.assign(S,JSON.parse(sv));}catch(e){}}
   else{S.habits=DEFAULT_HABITS.map((h,i)=>({...h,id:Date.now()+i}));}
-  autoHistory();startClock();applyLang();setGreeting();
+  // Show welcome screen if no name set
+  if(!S.userName){
+    document.getElementById('welcomeOverlay').classList.remove('hidden');
+    setTimeout(()=>document.getElementById('welcomeNameInput').focus(),200);
+  } else {
+    document.getElementById('welcomeOverlay').classList.add('hidden');
+  }
+  autoHistory();checkMidnightReset();startClock();applyLang();setGreeting();
   renderAccordion();updateStats();setQuote();updateProfileStats();
+  renderMoodTracker();renderAfirmasi();renderMedicineCard();renderDoctorCard();
+}
+
+function startApp(){
+  const name=document.getElementById('welcomeNameInput').value.trim();
+  if(!name)return;
+  S.userName=name;save();
+  document.getElementById('welcomeOverlay').classList.add('hidden');
+  setGreeting();updateProfileStats();toast('✨ Selamat datang, '+name+'! ♥');
 }
 
 function autoHistory(){
@@ -726,6 +941,8 @@ function startClock(){
     const d=new Date();
     document.getElementById('clockChip').textContent=
       `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+    // Update greeting if minute changes
+    if(d.getSeconds()===0)setGreeting();
   }
   tick();setInterval(tick,1000);
 }
@@ -758,6 +975,7 @@ function showPage(id,el){
   if(id==='history')showHistory('daily',document.querySelector('#page-history .period-btn'));
   if(id==='goals'){renderGoals();renderDiary();}
   if(id==='profile')updateProfileStats();
+  if(id==='home'){renderMoodTracker();renderAfirmasi();renderMedicineCard();renderDoctorCard();}
 }
 
 // ── ACCORDION ───────────────────────────────────────────────────────────────
@@ -821,8 +1039,13 @@ function renderCharts(){
   const today=new Date();
   const wk=[];
   for(let i=6;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);const r=S.history.find(h=>h.date===ds(d));wk.push({label:DAYS()[d.getDay()],pct:r?r.pct:0});}
+  const hasAnyData=S.history.length>0;
   const mxW=Math.max(...wk.map(d=>d.pct),1);
-  document.getElementById('weekChart').innerHTML=wk.map(d=>`<div class="bar-item"><div class="bar-col" style="height:${Math.max((d.pct/mxW)*100,3)}px" title="${d.pct}%"></div><div class="bar-label">${d.label}</div></div>`).join('');
+  if(!hasAnyData){
+    document.getElementById('weekChart').innerHTML='<div class="analytics-empty"><div class="ae-icon">📊</div><p>Belum ada data.<br>Mulai check habit harianmu dan data akan muncul di sini! ✨</p></div>';
+  } else {
+    document.getElementById('weekChart').innerHTML=wk.map(d=>`<div class="bar-item"><div class="bar-col" style="height:${Math.max((d.pct/mxW)*100,3)}px" title="${d.pct}%"></div><div class="bar-label">${d.label}</div></div>`).join('');
+  }
   const mo=[];
   for(let i=5;i>=0;i--){
     const d=new Date(today.getFullYear(),today.getMonth()-i,1);
@@ -833,7 +1056,7 @@ function renderCharts(){
   const mxM=Math.max(...mo.map(d=>d.pct),1);
   document.getElementById('monthChart').innerHTML=mo.map(d=>`<div class="bar-item"><div class="bar-col sec" style="height:${Math.max((d.pct/mxM)*100,3)}px" title="${d.pct}%"></div><div class="bar-label">${d.label}</div></div>`).join('');
   const wkR=wk.filter(d=>d.pct>0);
-  document.getElementById('wk-pct').innerHTML=`${wkR.length>0?Math.round(wkR.reduce((a,d)=>a+d.pct,0)/wkR.length):0}<span>%</span>`;
+  document.getElementById('wk-pct').innerHTML=`${wkR.length>0?Math.round(wkR.reduce((a,d)=>a+d.pct,0)/wkR.length):S.history.length===0?'0':(wkR.length>0?Math.round(wkR.reduce((a,d)=>a+d.pct,0)/wkR.length):0)}<span>%</span>`;
   document.getElementById('mo-pct').innerHTML=`${mo[5].pct}<span>%</span>`;
 }
 
@@ -916,6 +1139,8 @@ function switchGoalTab(tab,el){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');
   document.getElementById('goals-tab').style.display=tab==='goals'?'block':'none';
   document.getElementById('diary-tab').style.display=tab==='diary'?'block':'none';
+  const jt=document.getElementById('journal-tab');if(jt)jt.style.display=tab==='journal'?'block':'none';
+  if(tab==='journal')renderJournals();
 }
 function selGoalPeriod(p,el){
   S.goalPeriod=p;
@@ -963,61 +1188,516 @@ function renderDiary(){
     </div>`).join('');
 }
 
-// ── EXPORT ──────────────────────────────────────────────────────────────────
+// ── MIDNIGHT AUTO-RESET ─────────────────────────────────────────────────────
+function checkMidnightReset(){
+  const now = new Date();
+  // Convert to WIB (UTC+7)
+  const wibOffset = 7 * 60;
+  const localOffset = -now.getTimezoneOffset();
+  const wibNow = new Date(now.getTime() + (wibOffset - localOffset) * 60000);
+  const todayWIB = `${wibNow.getFullYear()}-${String(wibNow.getMonth()+1).padStart(2,'0')}-${String(wibNow.getDate()).padStart(2,'0')}`;
+  const lastReset = S.lastResetDate || '';
+  if(lastReset && lastReset !== todayWIB){
+    // Save today's progress to history BEFORE resetting
+    saveHistoryToday();
+    // Reset all habit done status
+    S.habits.forEach(h => h.done = false);
+    // Reset daily items (mood, afirmasi, medicine — they are date-keyed so they auto-reset, but explicitly clear)
+    S.moodToday = {date:'', mood:0, emoji:''};
+    S.afirmasiToday = {date:'', text:''};
+    S.medicineTaken = {date:'', taken:false};
+    S.lastResetDate = todayWIB;
+    save();
+    renderAccordion(); updateStats();
+    renderMoodTracker(); renderAfirmasi(); renderMedicineCard();
+    toast('🌅 Hari baru dimulai! Semua habit direset. Semangat! ✨');
+  } else if(!lastReset){
+    S.lastResetDate = todayWIB;
+    save();
+  }
+}
+// Run check every 30 seconds
+setInterval(checkMidnightReset, 30000);
+
+// ── EXPORT HELPERS ──────────────────────────────────────────────────────────
 function setExportPeriod(p,el){
   S.exportPeriod=p;document.querySelectorAll('.pe-btn').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');toast(`${t('period-sel')}: ${p}`);
 }
 function getHistRecs(){
   const today=new Date();
-  if(S.exportPeriod==='Harian'){const td=ds(today);const r=S.history.find(h=>h.date===td);if(r)return[{Date:r.date,Total:r.total,Done:r.done,'%':r.pct}];return[{Date:td,Total:S.habits.length,Done:S.habits.filter(h=>h.done).length,'%':Math.round((S.habits.filter(h=>h.done).length/Math.max(S.habits.length,1))*100)}];}
-  if(S.exportPeriod==='Mingguan'){const recs=[];for(let i=6;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);const r=S.history.find(h=>h.date===ds(d));recs.push({Date:ds(d),Day:DAYS()[d.getDay()],Total:r?r.total:0,Done:r?r.done:0,'%':r?r.pct:0});}return recs;}
-  if(S.exportPeriod==='Bulanan'){const yr=today.getFullYear(),mo=today.getMonth()+1;return S.history.filter(h=>{const[y,m]=h.date.split('-').map(Number);return y===yr&&m===mo;}).map(r=>({Date:r.date,Total:r.total,Done:r.done,'%':r.pct}));}
-  return S.history.map(r=>({Date:r.date,Total:r.total,Done:r.done,'%':r.pct}));
+  if(S.exportPeriod==='Harian'){const td=ds(today);const r=S.history.find(h=>h.date===td);if(r)return[r];return[{date:td,total:S.habits.length,done:S.habits.filter(h=>h.done).length,pct:Math.round((S.habits.filter(h=>h.done).length/Math.max(S.habits.length,1))*100),snapshot:S.habits.map(h=>({title:h.title,cat:h.cat,done:h.done}))}];}
+  if(S.exportPeriod==='Mingguan'){const recs=[];for(let i=6;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);const r=S.history.find(h=>h.date===ds(d));recs.push(r||{date:ds(d),total:0,done:0,pct:0,snapshot:[]});}return recs;}
+  if(S.exportPeriod==='Bulanan'){const yr=today.getFullYear(),mo=today.getMonth()+1;return S.history.filter(h=>{const[y,m]=h.date.split('-').map(Number);return y===yr&&m===mo;});}
+  return S.history;
 }
+function getDateLabel(dateStr){
+  const d=new Date(dateStr+'T00:00:00');
+  return `${DAYS()[d.getDay()]}, ${d.getDate()} ${MONF()[d.getMonth()]} ${d.getFullYear()}`;
+}
+function getPctLabel(pct){return pct>=80?'Luar Biasa':pct>=60?'Baik':pct>=40?'Cukup':'Perlu Ditingkatkan';}
+function pdfAddPage(doc,y,W){if(y>262){doc.addPage();return 20;}return y;}
+
+// ── EXPORT EXCEL (DETAIL) ──────────────────────────────────────────────────
 function exportExcel(){
-  const wb=XLSX.utils.book_new();const today=new Date();
-  const ws1=XLSX.utils.aoa_to_sheet([['EUNOIA — ACTIVITY REPORT',''],['',''],['User',S.userName],['Export Date',today.toLocaleDateString()],['Period',S.exportPeriod],['Streak',S.streak+' days'],['',''],['SUMMARY',''],['Total Habits',S.habits.length],['Done Today',S.habits.filter(h=>h.done).length],['Today Progress',Math.round((S.habits.filter(h=>h.done).length/Math.max(S.habits.length,1))*100)+'%'],['Total Goals',S.goals.length],['Total Diary',S.diary.length]]);
-  ws1['!cols']=[{wch:26},{wch:40}];XLSX.utils.book_append_sheet(wb,ws1,'Summary');
-  const ws2=XLSX.utils.json_to_sheet(S.habits.map((h,i)=>({'No':i+1,'Habit':h.title,'Category':h.cat,'Status':h.done?'Done':'Pending'})));
-  ws2['!cols']=[{wch:6},{wch:36},{wch:16},{wch:14}];XLSX.utils.book_append_sheet(wb,ws2,'Habits');
+  const wb=XLSX.utils.book_new();
+  const today=new Date();
+  const todayStr=today.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const recs=getHistRecs();
-  const ws3=XLSX.utils.json_to_sheet(recs.length>0?recs:[{Date:'No data',Total:0,Done:0,'%':0}]);
-  ws3['!cols']=[{wch:14},{wch:10},{wch:10},{wch:10}];XLSX.utils.book_append_sheet(wb,ws3,`${S.exportPeriod} Recap`);
-  const ws4=XLSX.utils.json_to_sheet(S.goals.length>0?S.goals.map((g,i)=>({'No':i+1,'Period':g.period,'Goal':g.text,'Date':g.date})):[{'No':'-','Period':'-','Goal':'No goals','Date':'-'}]);
-  ws4['!cols']=[{wch:6},{wch:14},{wch:52},{wch:14}];XLSX.utils.book_append_sheet(wb,ws4,'Goals');
-  const ws5=XLSX.utils.json_to_sheet(S.diary.length>0?S.diary.map((d,i)=>({'No':i+1,'Date':d.date,'Time':d.time,'Mood':d.mood,'Title':d.title,'Entry':d.content})):[{'No':'-','Date':'-','Time':'-','Mood':'-','Title':'No diary','Entry':'-'}]);
-  ws5['!cols']=[{wch:6},{wch:14},{wch:10},{wch:8},{wch:28},{wch:60}];XLSX.utils.book_append_sheet(wb,ws5,'Diary');
-  XLSX.writeFile(wb,`Eunoia_${S.exportPeriod}_${ds(today)}.xlsx`);toast(t('excel-ok'));
+  const doneCnt=S.habits.filter(h=>h.done).length;
+  const totalCnt=S.habits.length;
+  const pctToday=Math.round((doneCnt/Math.max(totalCnt,1))*100);
+
+  // ── SHEET 1: RINGKASAN EKSEKUTIF ─────────────────────────────────────────
+  const avgPct=recs.length>0?Math.round(recs.reduce((a,r)=>a+(r.pct||0),0)/recs.length):0;
+  const bestRec=recs.length>0?recs.reduce((a,r)=>(r.pct||0)>(a.pct||0)?r:a,recs[0]):null;
+  const ws1=XLSX.utils.aoa_to_sheet([
+    ['╔══════════════════════════════════════════════╗'],
+    ['        ✦  EUNOIA — LAPORAN REKAP AKTIVITAS'],
+    ['╚══════════════════════════════════════════════╝'],
+    [''],
+    ['INFORMASI LAPORAN'],
+    ['Nama Pengguna', S.userName||'—'],
+    ['Tanggal Ekspor', todayStr],
+    ['Periode Laporan', S.exportPeriod],
+    ['Dibuat pada', today.toLocaleTimeString('id-ID')],
+    [''],
+    ['RINGKASAN PERFORMA'],
+    ['Total Habit Terdaftar', totalCnt, 'habit'],
+    ['Habit Selesai Hari Ini', doneCnt, 'habit'],
+    ['Progress Hari Ini', pctToday+'%', getPctLabel(pctToday)],
+    ['Streak Berturut-turut', S.streak, 'hari'],
+    ['Rata-rata Progress ('+S.exportPeriod+')', avgPct+'%', getPctLabel(avgPct)],
+    ['Hari Terbaik', bestRec?getDateLabel(bestRec.date):'—', bestRec?(bestRec.pct+'%'):''],
+    ['Total Catatan Harian (Diary)', S.diary.length, 'entri'],
+    ['Total Goals/Tujuan', S.goals.length, 'tujuan'],
+    ['Total Jurnal Perasaan', (S.journals||[]).length, 'entri'],
+    [''],
+    ['RINGKASAN HABIT PER KATEGORI'],
+    ['Kategori','Jumlah Habit','Selesai Hari Ini','% Selesai'],
+    ...CATS.map(cat=>{
+      const items=S.habits.filter(h=>h.cat===cat.id);
+      const catDone=items.filter(h=>h.done).length;
+      const catPct=items.length>0?Math.round((catDone/items.length)*100):0;
+      return [cat.icon+' '+cat.id, items.length, catDone, catPct+'%'];
+    }),
+    [''],
+    ['STATUS HARI INI'],
+    ['Mood', S.moodToday&&S.moodToday.mood>0?(S.moodToday.emoji+' '+S.moodToday.mood+'/5'):'Belum diisi'],
+    ['Afirmasi', S.afirmasiToday&&S.afirmasiToday.text?'"'+S.afirmasiToday.text+'"':'Belum diisi'],
+    ['Minum Obat', S.medicineTaken&&S.medicineTaken.taken?'✅ Sudah':'❌ Belum'],
+    ['Jadwal Dokter', S.doctorSchedule?S.doctorSchedule:'Belum diatur'],
+  ]);
+  ws1['!cols']=[{wch:34},{wch:38},{wch:22}];
+  XLSX.utils.book_append_sheet(wb,ws1,'📊 Ringkasan');
+
+  // ── SHEET 2: DETAIL HABIT HARI INI ───────────────────────────────────────
+  const habitRows=[
+    ['No','Habit / Kebiasaan','Kategori','Status Hari Ini','Keterangan'],
+    ...S.habits.map((h,i)=>[
+      i+1,
+      h.title,
+      h.cat,
+      h.done?'✅ Selesai':'⏳ Belum Selesai',
+      h.done?'Habit berhasil diselesaikan hari ini':'Masih perlu dikerjakan'
+    ])
+  ];
+  const ws2=XLSX.utils.aoa_to_sheet(habitRows);
+  ws2['!cols']=[{wch:5},{wch:38},{wch:16},{wch:20},{wch:36}];
+  XLSX.utils.book_append_sheet(wb,ws2,'✅ Habit Hari Ini');
+
+  // ── SHEET 3: REKAP HISTORIS DETAIL ───────────────────────────────────────
+  const recapHeader=['Tanggal','Hari','Total Habit','Selesai','Belum','Progress (%)','Status','Keterangan'];
+  const recapRows=recs.map(r=>{
+    const d=new Date((r.date||ds(today))+'T00:00:00');
+    const pending=(r.total||0)-(r.done||0);
+    return [
+      r.date||ds(today),
+      DAYS()[d.getDay()]||'—',
+      r.total||0,
+      r.done||0,
+      pending,
+      (r.pct||0)+'%',
+      getPctLabel(r.pct||0),
+      (r.pct||0)>=80?'Konsisten & Produktif':(r.pct||0)>=60?'Performa Baik':(r.pct||0)>=40?'Perlu Ditingkatkan':'Butuh Perhatian Ekstra'
+    ];
+  });
+  const ws3=XLSX.utils.aoa_to_sheet([recapHeader,...recapRows]);
+  ws3['!cols']=[{wch:14},{wch:10},{wch:14},{wch:12},{wch:12},{wch:14},{wch:20},{wch:30}];
+  XLSX.utils.book_append_sheet(wb,ws3,'📅 Rekap '+S.exportPeriod);
+
+  // ── SHEET 4: DETAIL HABIT PER HARI (jika ada snapshot) ──────────────────
+  const snapRows=[['Tanggal','Habit','Kategori','Status']];
+  recs.forEach(r=>{
+    if(r.snapshot&&r.snapshot.length>0){
+      r.snapshot.forEach(h=>{
+        snapRows.push([r.date,h.title,h.cat,h.done?'✅ Selesai':'❌ Belum']);
+      });
+      snapRows.push(['','','','']); // spacer
+    }
+  });
+  if(snapRows.length>1){
+    const ws3b=XLSX.utils.aoa_to_sheet(snapRows);
+    ws3b['!cols']=[{wch:14},{wch:38},{wch:16},{wch:16}];
+    XLSX.utils.book_append_sheet(wb,ws3b,'🔍 Detail Habit Per Hari');
+  }
+
+  // ── SHEET 5: GOALS / TUJUAN ───────────────────────────────────────────────
+  const ws4=XLSX.utils.aoa_to_sheet([
+    ['No','Periode','Tujuan / Goal','Tanggal Dibuat','Keterangan'],
+    ...(S.goals.length>0?S.goals.map((g,i)=>[
+      i+1, g.period, g.text, g.date,
+      g.period==='Harian'?'Target harian':g.period==='Mingguan'?'Target 7 hari ke depan':g.period==='Bulanan'?'Target sebulan ke depan':'Target jangka panjang'
+    ]):[['—','—','Belum ada goals','—','Mulai tambahkan goals kamu!']])
+  ]);
+  ws4['!cols']=[{wch:5},{wch:14},{wch:54},{wch:16},{wch:30}];
+  XLSX.utils.book_append_sheet(wb,ws4,'🎯 Goals');
+
+  // ── SHEET 6: DIARY / CATATAN HARIAN ──────────────────────────────────────
+  const ws5=XLSX.utils.aoa_to_sheet([
+    ['No','Tanggal','Waktu','Mood','Judul','Isi Catatan'],
+    ...(S.diary.length>0?S.diary.slice().reverse().map((d,i)=>[
+      i+1, d.date, d.time, d.mood, d.title, d.content
+    ]):[['—','—','—','—','Belum ada diary','Mulai ceritakan harimu!']])
+  ]);
+  ws5['!cols']=[{wch:5},{wch:14},{wch:10},{wch:8},{wch:30},{wch:70}];
+  XLSX.utils.book_append_sheet(wb,ws5,'📖 Diary');
+
+  // ── SHEET 7: JURNAL PERASAAN ──────────────────────────────────────────────
+  const journals=S.journals||[];
+  const ws6=XLSX.utils.aoa_to_sheet([
+    ['No','Tanggal','Waktu','Mood (1-5)','Emoji','Isi Jurnal'],
+    ...(journals.length>0?journals.slice().reverse().map((j,i)=>[
+      i+1, j.date, j.time, j.mood, j.emoji, j.content
+    ]):[['—','—','—','—','—','Belum ada jurnal perasaan']])
+  ]);
+  ws6['!cols']=[{wch:5},{wch:14},{wch:10},{wch:12},{wch:8},{wch:80}];
+  XLSX.utils.book_append_sheet(wb,ws6,'🌿 Jurnal Perasaan');
+
+  XLSX.writeFile(wb,`Eunoia_Rekap_${S.exportPeriod}_${ds(today)}.xlsx`);
+  toast(t('excel-ok'));
 }
+
+// ── EXPORT PDF (DETAIL & RAPI) ─────────────────────────────────────────────
 async function exportPDF(){
-  const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'mm',format:'a4'});const today=new Date();const W=doc.internal.pageSize.getWidth();
-  doc.setFillColor(3,11,20);doc.rect(0,0,W,52,'F');
-  doc.setFillColor(14,165,233);doc.roundedRect(14,10,32,32,5,5,'F');
-  doc.setTextColor(255,255,255);doc.setFontSize(16);doc.setFont('helvetica','bold');doc.text('✦',24,29);
-  doc.setFontSize(22);doc.text('Eunoia',52,22);
-  doc.setFontSize(10);doc.setFont('helvetica','normal');doc.setTextColor(125,211,252);doc.text('Personal Growth Dashboard — Activity Report',52,30);
-  doc.setTextColor(58,106,130);doc.setFontSize(9);doc.text(`${today.toLocaleDateString()} · Period: ${S.exportPeriod}`,52,40);
-  doc.setFillColor(7,21,37);doc.rect(0,52,W,18,'F');
-  doc.setTextColor(125,211,252);doc.setFontSize(10);doc.setFont('helvetica','bold');doc.text(`User: ${S.userName}`,15,63);
-  doc.setFont('helvetica','normal');doc.text(`Streak: ${S.streak} days`,100,63);doc.text(`Total Habits: ${S.habits.length}`,155,63);
-  let y=80;
-  doc.setFontSize(12);doc.setFont('helvetica','bold');doc.setTextColor(232,244,253);doc.text('Summary',15,y);y+=6;
-  const stats=[{l:'Total Habits',v:S.habits.length,c:[14,165,233]},{l:'Done Today',v:S.habits.filter(h=>h.done).length,c:[52,211,153]},{l:'Progress',v:Math.round((S.habits.filter(h=>h.done).length/Math.max(S.habits.length,1))*100)+'%',c:[34,211,238]},{l:'Goals',v:S.goals.length,c:[6,182,212]}];
-  const cw=(W-30)/4-3;
-  stats.forEach((s,i)=>{const x=15+i*(cw+4);doc.setFillColor(...s.c);doc.roundedRect(x,y,cw,20,3,3,'F');doc.setTextColor(255,255,255);doc.setFontSize(15);doc.setFont('helvetica','bold');doc.text(String(s.v),x+cw/2,y+10,{align:'center'});doc.setFontSize(7);doc.setFont('helvetica','normal');doc.text(s.l,x+cw/2,y+16,{align:'center'});});
-  y+=28;
-  doc.setFontSize(12);doc.setFont('helvetica','bold');doc.setTextColor(232,244,253);doc.text('Habit List',15,y);y+=5;
-  doc.setFillColor(7,21,37);doc.roundedRect(14,y,W-28,8,2,2,'F');
-  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(14,165,233);doc.text('No',18,y+5.5);doc.text('Habit',26,y+5.5);doc.text('Category',115,y+5.5);doc.text('Status',158,y+5.5);y+=10;
-  doc.setFont('helvetica','normal');doc.setFontSize(8);
-  S.habits.forEach((h,i)=>{if(y>270){doc.addPage();y=20;}if(i%2===0){doc.setFillColor(7,21,37);doc.rect(14,y-4,W-28,9,'F');}doc.setTextColor(232,244,253);doc.text(String(i+1),18,y+2);doc.text(h.title.substring(0,46),26,y+2);doc.text(h.cat,115,y+2);if(h.done){doc.setTextColor(52,211,153);}else{doc.setTextColor(248,113,113);}doc.text(h.done?'Done':'Pending',158,y+2);y+=9;});y+=6;
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const today=new Date();
+  const W=doc.internal.pageSize.getWidth();
+  const H=doc.internal.pageSize.getHeight();
   const recs=getHistRecs();
-  if(recs.length>0){if(y>240){doc.addPage();y=20;}doc.setFontSize(12);doc.setFont('helvetica','bold');doc.setTextColor(232,244,253);doc.text(`${S.exportPeriod} Recap`,15,y);y+=5;doc.setFillColor(7,21,37);doc.roundedRect(14,y,W-28,8,2,2,'F');doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(14,165,233);doc.text('Date',18,y+5.5);doc.text('Total',75,y+5.5);doc.text('Done',108,y+5.5);doc.text('%',152,y+5.5);y+=10;doc.setFont('helvetica','normal');recs.slice(0,20).forEach((r,i)=>{if(y>268){doc.addPage();y=20;}if(i%2===0){doc.setFillColor(7,21,37);doc.rect(14,y-4,W-28,9,'F');}const p=r['%']||0;doc.setTextColor(232,244,253);doc.text(String(r.Date||''),18,y+2);doc.text(String(r.Total||0),82,y+2);doc.text(String(r.Done||0),114,y+2);doc.setTextColor(...(p>=80?[52,211,153]:p>=50?[14,165,233]:[248,113,113]));doc.text(p+'%',154,y+2);y+=9;});y+=6;}
-  if(S.goals.length>0&&y<245){if(y>240){doc.addPage();y=20;}doc.setFontSize(12);doc.setFont('helvetica','bold');doc.setTextColor(232,244,253);doc.text('Goals',15,y);y+=7;S.goals.forEach(g=>{if(y>265){doc.addPage();y=20;}doc.setFillColor(7,21,37);doc.roundedRect(14,y-4,W-28,13,2,2,'F');doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(14,165,233);doc.text(`[${g.period}]`,18,y+3);doc.setTextColor(232,244,253);doc.text(g.text.substring(0,58),48,y+3);doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(58,106,130);doc.text(g.date,W-17,y+3,{align:'right'});y+=15;});y+=4;}
-  if(S.diary.length>0&&y<240){if(y>240){doc.addPage();y=20;}doc.setFontSize(12);doc.setFont('helvetica','bold');doc.setTextColor(232,244,253);doc.text('Diary',15,y);y+=7;S.diary.slice(-8).forEach(d=>{if(y>260){doc.addPage();y=20;}doc.setFillColor(7,21,37);doc.roundedRect(14,y-4,W-28,18,2,2,'F');doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(34,211,238);doc.text(`${d.title.substring(0,40)}`,18,y+2);doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(58,106,130);doc.text(`${d.date} ${d.time}`,W-17,y+2,{align:'right'});doc.setTextColor(126,184,212);const prev=doc.splitTextToSize(d.content.replace(/\n/g,' '),W-36);doc.text((prev[0]||'').substring(0,80)+(prev.length>1?'...':''),18,y+9);y+=21;});}
-  const pages=doc.internal.getNumberOfPages();
-  for(let p=1;p<=pages;p++){doc.setPage(p);doc.setFillColor(7,21,37);doc.rect(0,285,W,12,'F');doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(58,106,130);doc.text('Generated by Eunoia — Beautiful Mind · Personal Growth Dashboard',15,292);doc.text(`Page ${p} of ${pages}`,W-15,292,{align:'right'});}
-  doc.save(`Eunoia_Report_${S.exportPeriod}_${ds(today)}.pdf`);toast(t('pdf-ok'));
+  const doneCnt=S.habits.filter(h=>h.done).length;
+  const totalCnt=S.habits.length;
+  const pctToday=Math.round((doneCnt/Math.max(totalCnt,1))*100);
+  const avgPct=recs.length>0?Math.round(recs.reduce((a,r)=>a+(r.pct||0),0)/recs.length):0;
+
+  // ─── HELPER FUNCTIONS ─────────────────────────────────────────────────────
+  function newPage(){doc.addPage();}
+  function drawHeader(pageTitle){
+    // Full dark header bar
+    doc.setFillColor(3,11,20);doc.rect(0,0,W,44,'F');
+    // Accent left strip
+    doc.setFillColor(14,165,233);doc.rect(0,0,4,44,'F');
+    // Logo box
+    doc.setFillColor(14,165,233);doc.roundedRect(10,8,26,26,4,4,'F');
+    doc.setFontSize(14);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');
+    doc.text('EU',23,24,{align:'center'});
+    // App name
+    doc.setFontSize(18);doc.setTextColor(125,211,252);doc.setFont('helvetica','bold');
+    doc.text('EUNOIA',42,18);
+    doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(58,106,130);
+    doc.text('Beautiful Mind — Personal Growth Dashboard',42,25);
+    // Page title pill
+    doc.setFillColor(14,165,233,0.2);doc.setFillColor(7,21,37);
+    doc.roundedRect(42,28,120,10,3,3,'F');
+    doc.setFontSize(8);doc.setTextColor(34,211,238);doc.setFont('helvetica','bold');
+    doc.text(pageTitle,102,34.5,{align:'center'});
+    // Date on the right
+    doc.setFontSize(8);doc.setTextColor(58,106,130);doc.setFont('helvetica','normal');
+    doc.text(today.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),W-12,18,{align:'right'});
+    doc.text('Periode: '+S.exportPeriod,W-12,25,{align:'right'});
+    doc.text('Pengguna: '+S.userName,W-12,32,{align:'right'});
+    // Bottom border of header
+    doc.setDrawColor(14,165,233);doc.setLineWidth(0.4);doc.line(0,44,W,44);
+  }
+  function drawSectionTitle(title,y,icon){
+    doc.setFillColor(7,21,37);doc.roundedRect(12,y-5,W-24,10,2,2,'F');
+    doc.setDrawColor(14,165,233);doc.setLineWidth(0.3);doc.line(12,y-5,16,y-5);doc.line(12,y-5,12,y+5);
+    doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(14,165,233);
+    doc.text((icon?icon+' ':'')+title,18,y+1);
+    return y+10;
+  }
+  function drawFooter(page,total){
+    doc.setFillColor(7,21,37);doc.rect(0,H-10,W,10,'F');
+    doc.setFontSize(7);doc.setFont('helvetica','normal');
+    doc.setTextColor(58,106,130);
+    doc.text('Eunoia — Beautiful Mind · Laporan '+S.exportPeriod+' · Dibuat: '+today.toLocaleString('id-ID'),14,H-4);
+    doc.setTextColor(14,165,233);
+    doc.text('Hal '+page+' / '+total,W-14,H-4,{align:'right'});
+  }
+  function colorByPct(pct){return pct>=80?[52,211,153]:pct>=60?[14,165,233]:pct>=40?[251,191,36]:[248,113,113];}
+  function miniBar(x,y,w,h,pct){
+    doc.setFillColor(20,40,60);doc.roundedRect(x,y,w,h,1,1,'F');
+    const fillW=Math.max((pct/100)*w,1);
+    const c=colorByPct(pct);doc.setFillColor(...c);doc.roundedRect(x,y,fillW,h,1,1,'F');
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PAGE 1 — COVER & RINGKASAN EKSEKUTIF
+  // ═══════════════════════════════════════════════════════════════════════════
+  drawHeader('LAPORAN REKAP AKTIVITAS — '+S.exportPeriod.toUpperCase());
+  let y=52;
+
+  // User card
+  doc.setFillColor(7,21,37);doc.roundedRect(12,y,W-24,24,4,4,'F');
+  doc.setDrawColor(14,165,233);doc.setLineWidth(0.5);doc.roundedRect(12,y,W-24,24,4,4,'S');
+  doc.setFillColor(14,165,233);doc.circle(26,y+12,8,'F');
+  doc.setFontSize(12);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');
+  doc.text((S.userName||'U').charAt(0).toUpperCase(),26,y+14.5,{align:'center'});
+  doc.setFontSize(13);doc.setTextColor(232,244,253);doc.setFont('helvetica','bold');
+  doc.text(S.userName||'Eunoia User',40,y+9);
+  doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(125,211,252);
+  doc.text('Streak: '+S.streak+' hari berturut-turut',40,y+15);
+  doc.text('Total habit: '+totalCnt+' · Goals: '+S.goals.length+' · Diary: '+S.diary.length+' entri',40,y+21);
+  // Pct badge
+  const pc=colorByPct(pctToday);doc.setFillColor(...pc);doc.roundedRect(W-38,y+4,24,16,3,3,'F');
+  doc.setFontSize(14);doc.setFont('helvetica','bold');doc.setTextColor(255,255,255);
+  doc.text(pctToday+'%',W-26,y+13,{align:'center'});
+  doc.setFontSize(7);doc.text('HARI INI',W-26,y+18,{align:'center'});
+  y+=30;
+
+  // Stat cards row
+  const statCards=[
+    {label:'Total Habit',val:String(totalCnt),sub:'Terdaftar',c:[14,165,233]},
+    {label:'Selesai Hari Ini',val:String(doneCnt),sub:'Dari '+totalCnt+' habit',c:[52,211,153]},
+    {label:'Progress Hari Ini',val:pctToday+'%',sub:getPctLabel(pctToday),c:colorByPct(pctToday)},
+    {label:'Rata-rata '+S.exportPeriod,val:avgPct+'%',sub:recs.length+' hari tercatat',c:colorByPct(avgPct)},
+  ];
+  const cw=(W-28)/4-3;
+  statCards.forEach((s,i)=>{
+    const x=12+i*(cw+4);
+    doc.setFillColor(7,21,37);doc.roundedRect(x,y,cw,26,3,3,'F');
+    doc.setFillColor(...s.c);doc.roundedRect(x,y,cw,4,3,3,'F');doc.rect(x,y+2,cw,2,'F');
+    doc.setFontSize(14);doc.setFont('helvetica','bold');doc.setTextColor(...s.c);
+    doc.text(s.val,x+cw/2,y+15,{align:'center'});
+    doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(125,211,252);
+    doc.text(s.label,x+cw/2,y+21,{align:'center'});
+    doc.setFontSize(6.5);doc.setFont('helvetica','normal');doc.setTextColor(58,106,130);
+    doc.text(s.sub,x+cw/2,y+25,{align:'center'});
+  });
+  y+=32;
+
+  // Status Harian
+  y=drawSectionTitle('STATUS HARI INI',y,'◆');
+  const statusItems=[
+    {label:'Mood',val:S.moodToday&&S.moodToday.mood>0?(S.moodToday.emoji+' '+S.moodToday.mood+'/5'):'Belum diisi',ok:S.moodToday&&S.moodToday.mood>0},
+    {label:'Afirmasi Positif',val:S.afirmasiToday&&S.afirmasiToday.text?'"'+S.afirmasiToday.text.substring(0,50)+(S.afirmasiToday.text.length>50?'...':'')+'"':'Belum diisi',ok:S.afirmasiToday&&S.afirmasiToday.text},
+    {label:'Minum Obat ('+S.medicineName+')',val:S.medicineTaken&&S.medicineTaken.taken?'Sudah diminum':'Belum diminum',ok:S.medicineTaken&&S.medicineTaken.taken},
+    {label:'Jadwal Dokter',val:S.doctorSchedule||'Belum diatur',ok:!!S.doctorSchedule},
+  ];
+  statusItems.forEach((item,i)=>{
+    if(y>H-22){newPage();drawHeader('STATUS HARIAN (lanjutan)');y=52;}
+    if(i%2===0){doc.setFillColor(7,21,37);doc.rect(12,y-3.5,W-24,8,'F');}
+    const ok=item.ok;
+    doc.setFillColor(...(ok?[52,211,153]:[248,113,113]));
+    doc.circle(18,y+0.5,2.5,'F');
+    doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(125,211,252);
+    doc.text(item.label,24,y+1.5);
+    doc.setFont('helvetica','normal');doc.setTextColor(ok?52:248,ok?211:113,ok?153:113);
+    doc.text(item.val.substring(0,60),W-12,y+1.5,{align:'right'});
+    y+=8;
+  });
+  y+=6;
+
+  // Habit per Kategori
+  y=drawSectionTitle('REKAP HABIT PER KATEGORI',y,'◆');
+  CATS.forEach(cat=>{
+    if(y>H-20){newPage();drawHeader('REKAP HABIT (lanjutan)');y=52;}
+    const items=S.habits.filter(h=>h.cat===cat.id);
+    if(items.length===0)return;
+    const catDone=items.filter(h=>h.done).length;
+    const catPct=Math.round((catDone/items.length)*100);
+    doc.setFillColor(10,28,46);doc.roundedRect(12,y-3,W-24,8,'F');
+    doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(232,244,253);
+    doc.text(cat.icon+' '+cat.id,18,y+1.5);
+    doc.setFontSize(8);doc.setTextColor(...colorByPct(catPct));
+    doc.text(catDone+'/'+items.length+' ('+catPct+'%)',W-16,y+1.5,{align:'right'});
+    miniBar(80,y-1.5,60,5,catPct);
+    y+=9;
+  });
+  y+=4;
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PAGE 2 — DETAIL SEMUA HABIT
+  // ═══════════════════════════════════════════════════════════════════════════
+  newPage();drawHeader('DETAIL HABIT HARI INI');
+  y=52;
+  y=drawSectionTitle('DAFTAR LENGKAP HABIT & STATUS',y,'◆');
+
+  // Table header
+  doc.setFillColor(7,21,37);doc.roundedRect(12,y-1,W-24,8,2,2,'F');
+  doc.setFontSize(7.5);doc.setFont('helvetica','bold');doc.setTextColor(14,165,233);
+  doc.text('No',16,y+4);doc.text('Habit / Kebiasaan',24,y+4);
+  doc.text('Kategori',130,y+4);doc.text('Status',165,y+4);
+  y+=10;
+
+  S.habits.forEach((h,i)=>{
+    if(y>H-16){newPage();drawHeader('DETAIL HABIT (lanjutan)');y=52;}
+    if(i%2===0){doc.setFillColor(5,18,32);doc.rect(12,y-3.5,W-24,8.5,'F');}
+    doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(200,220,240);
+    doc.text(String(i+1),16.5,y+1);
+    doc.text(h.title.substring(0,54),24,y+1);
+    doc.text(h.cat,130,y+1);
+    if(h.done){doc.setFillColor(52,211,153);doc.roundedRect(162,y-2.5,24,7,2,2,'F');
+      doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.text('Selesai',174,y+1,{align:'center'});}
+    else{doc.setFillColor(30,50,70);doc.roundedRect(162,y-2.5,24,7,2,2,'F');
+      doc.setTextColor(248,113,113);doc.setFont('helvetica','normal');doc.text('Pending',174,y+1,{align:'center'});}
+    y+=8;
+  });
+  y+=4;
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PAGE 3 — REKAP HISTORIS DETAIL
+  // ═══════════════════════════════════════════════════════════════════════════
+  newPage();drawHeader('REKAP HISTORIS — '+S.exportPeriod.toUpperCase());
+  y=52;
+  y=drawSectionTitle('DATA REKAP '+S.exportPeriod.toUpperCase()+' ('+recs.length+' hari)',y,'◆');
+
+  // Table header
+  doc.setFillColor(7,21,37);doc.roundedRect(12,y-1,W-24,8,2,2,'F');
+  doc.setFontSize(7.5);doc.setFont('helvetica','bold');doc.setTextColor(14,165,233);
+  doc.text('Tanggal',16,y+4);doc.text('Hari',52,y+4);doc.text('Total',78,y+4);
+  doc.text('Selesai',95,y+4);doc.text('Progress',112,y+4);doc.text('Bar',132,y+4);doc.text('Status',165,y+4);
+  y+=10;
+
+  recs.forEach((r,i)=>{
+    if(y>H-16){newPage();drawHeader('REKAP HISTORIS (lanjutan)');y=52;}
+    const d=new Date((r.date||ds(today))+'T00:00:00');
+    const pct=r.pct||0;
+    if(i%2===0){doc.setFillColor(5,18,32);doc.rect(12,y-3.5,W-24,8.5,'F');}
+    doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(200,220,240);
+    doc.text(r.date||ds(today),16,y+1);
+    doc.text(DAYS()[d.getDay()]||'—',52,y+1);
+    doc.text(String(r.total||0),82,y+1,{align:'center'});
+    doc.text(String(r.done||0),99,y+1,{align:'center'});
+    doc.setTextColor(...colorByPct(pct));doc.setFont('helvetica','bold');
+    doc.text(pct+'%',118,y+1,{align:'center'});
+    miniBar(128,y-2,34,6,pct);
+    doc.setFontSize(6.5);doc.setFont('helvetica','normal');
+    doc.text(getPctLabel(pct),165,y+1);
+    y+=8;
+  });
+
+  // Statistik rekap
+  if(recs.length>0){
+    y+=4;
+    if(y>H-40){newPage();drawHeader('STATISTIK REKAP');y=52;}
+    y=drawSectionTitle('STATISTIK RINGKAS',y,'◆');
+    const best=recs.reduce((a,r)=>(r.pct||0)>(a.pct||0)?r:a,recs[0]);
+    const worst=recs.reduce((a,r)=>(r.pct||0)<(a.pct||0)?r:a,recs[0]);
+    const totalDone=recs.reduce((a,r)=>a+(r.done||0),0);
+    const statLines=[
+      ['Rata-rata Progress', avgPct+'%'],
+      ['Hari Terbaik', getDateLabel(best.date)+' ('+best.pct+'%)'],
+      ['Hari Terendah', getDateLabel(worst.date)+' ('+worst.pct+'%)'],
+      ['Total Habit Diselesaikan', String(totalDone)+' kali'],
+      ['Jumlah Hari Tercatat', String(recs.length)+' hari'],
+    ];
+    statLines.forEach((sl,i)=>{
+      if(i%2===0){doc.setFillColor(5,18,32);doc.rect(12,y-3,W-24,7,'F');}
+      doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(125,211,252);
+      doc.text(sl[0],18,y+1);
+      doc.setFont('helvetica','normal');doc.setTextColor(232,244,253);
+      doc.text(sl[1],W-14,y+1,{align:'right'});
+      y+=7;
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PAGE 4 — GOALS & DIARY
+  // ═══════════════════════════════════════════════════════════════════════════
+  newPage();drawHeader('GOALS & DIARY');
+  y=52;
+
+  // Goals
+  y=drawSectionTitle('GOALS / TUJUAN HIDUP ('+S.goals.length+')',y,'◆');
+  if(S.goals.length===0){
+    doc.setFontSize(8);doc.setTextColor(58,106,130);doc.text('Belum ada goals. Mulai tambahkan tujuan hidupmu!',14,y+2);y+=10;
+  } else {
+    S.goals.forEach((g,i)=>{
+      if(y>H-20){newPage();drawHeader('GOALS (lanjutan)');y=52;}
+      doc.setFillColor(7,21,37);doc.roundedRect(12,y-3,W-24,14,2,2,'F');
+      doc.setFillColor(14,165,233);doc.roundedRect(12,y-3,3,14,1,1,'F');
+      doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(34,211,238);
+      doc.text('['+g.period+']',19,y+1);
+      doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(232,244,253);
+      const gLines=doc.splitTextToSize(g.text,W-52);
+      doc.text(gLines[0]||'',52,y+1);
+      if(gLines[1])doc.text(gLines[1],52,y+6);
+      doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(58,106,130);
+      doc.text('Dibuat: '+g.date,W-14,y+1,{align:'right'});
+      y+=15+((gLines[1])?0:0);
+    });
+  }
+  y+=4;
+
+  // Diary
+  if(y>H-50){newPage();drawHeader('DIARY');y=52;}
+  y=drawSectionTitle('DIARY / CATATAN HARIAN ('+S.diary.length+' entri)',y,'◆');
+  if(S.diary.length===0){
+    doc.setFontSize(8);doc.setTextColor(58,106,130);doc.text('Belum ada diary. Mulai ceritakan harimu!',14,y+2);y+=10;
+  } else {
+    S.diary.slice().reverse().slice(0,12).forEach((d)=>{
+      if(y>H-30){newPage();drawHeader('DIARY (lanjutan)');y=52;}
+      doc.setFillColor(7,21,37);doc.roundedRect(12,y-3,W-24,20,2,2,'F');
+      doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(34,211,238);
+      doc.text(d.mood+' '+d.title.substring(0,38),18,y+2);
+      doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(58,106,130);
+      doc.text(d.date+' · '+d.time,W-14,y+2,{align:'right'});
+      doc.setFontSize(7.5);doc.setTextColor(125,184,212);
+      const lines=doc.splitTextToSize(d.content.replace(/\n/g,' '),W-30);
+      doc.text(lines[0]||'',18,y+8);
+      if(lines[1])doc.text((lines[1]||'').substring(0,80)+(lines.length>2?'...':''),18,y+13);
+      y+=22;
+    });
+    if(S.diary.length>12){
+      doc.setFontSize(7);doc.setTextColor(58,106,130);
+      doc.text('... dan '+(S.diary.length-12)+' entri lainnya. Lihat Excel untuk data lengkap.',14,y+2);
+      y+=8;
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PAGE 5 — JURNAL PERASAAN
+  // ═══════════════════════════════════════════════════════════════════════════
+  const journals=S.journals||[];
+  if(journals.length>0){
+    newPage();drawHeader('JURNAL PERASAAN');
+    y=52;
+    y=drawSectionTitle('JURNAL PERASAAN ('+journals.length+' entri)',y,'◆');
+    journals.slice().reverse().slice(0,15).forEach((j,i)=>{
+      if(y>H-22){newPage();drawHeader('JURNAL PERASAAN (lanjutan)');y=52;}
+      if(i%2===0){doc.setFillColor(5,18,32);doc.rect(12,y-3.5,W-24,13,'F');}
+      const moodC=j.mood>=4?[52,211,153]:j.mood>=3?[251,191,36]:[248,113,113];
+      doc.setFillColor(...moodC);doc.roundedRect(14,y-2,16,8,2,2,'F');
+      doc.setFontSize(10);doc.setTextColor(255,255,255);doc.text(j.emoji,22,y+3.5,{align:'center'});
+      doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(...moodC);
+      doc.text(j.mood+'/5',22,y+8,{align:'center'});
+      doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(180,210,230);
+      const jLines=doc.splitTextToSize(j.content.replace(/\n/g,' · '),W-50);
+      doc.text(jLines[0]||'',36,y+2);
+      if(jLines[1])doc.text(jLines[1].substring(0,70),36,y+7);
+      doc.setFontSize(6.5);doc.setTextColor(58,106,130);
+      doc.text(j.date+' '+j.time,W-14,y+2,{align:'right'});
+      y+=13;
+    });
+  }
+
+  // ─── FOOTER ON ALL PAGES ──────────────────────────────────────────────────
+  const totalPages=doc.internal.getNumberOfPages();
+  for(let p=1;p<=totalPages;p++){doc.setPage(p);drawFooter(p,totalPages);}
+
+  doc.save(`Eunoia_Laporan_${S.exportPeriod}_${ds(today)}.pdf`);
+  toast(t('pdf-ok'));
 }
 
 // ── PROFILE ──────────────────────────────────────────────────────────────────
@@ -1035,6 +1715,153 @@ function saveName(){const v=document.getElementById('nameInput').value.trim();if
 function resetStreak(){if(confirm(t('confirm-streak'))){S.streak=0;save();updateProfileStats();toast(t('streak-reset'));}}
 function resetHabits(){if(confirm(t('confirm-habits'))){S.habits.forEach(h=>h.done=false);save();renderAccordion();updateStats();toast(t('habits-reset'));}}
 function clearAll(){if(confirm(t('confirm-clear'))){localStorage.removeItem('eunoia1');location.reload();}}
+
+
+// ── MOOD TRACKER ───────────────────────────────────────────────────────────
+function renderMoodTracker(){
+  const today=ds(new Date());
+  const row=document.getElementById('moodEmojiRow');
+  const show=document.getElementById('moodTodayShow');
+  if(!row)return;
+  // Restore selection
+  if(S.moodToday&&S.moodToday.date===today&&S.moodToday.mood>0){
+    row.style.display='none';show.style.display='flex';
+    document.getElementById('moodTodayEmoji').textContent=S.moodToday.emoji;
+    const labels=['','Sangat Berat 😞','Kurang Baik 😕','Lumayan 😐','Cukup Baik 🙂','Sangat Baik 😄'];
+    document.getElementById('moodTodayText').textContent='Mood hari ini: '+labels[S.moodToday.mood]+' ('+S.moodToday.mood+'/5)';
+  } else {
+    row.style.display='flex';show.style.display='none';
+  }
+}
+function setMood(num,emoji){
+  const today=ds(new Date());
+  S.moodToday={date:today,mood:num,emoji};save();
+  renderMoodTracker();
+  const labels=['','Sangat Berat','Kurang Baik','Lumayan','Cukup Baik','Sangat Baik'];
+  toast('🌈 Mood: '+labels[num]+' ('+num+'/5)');
+}
+
+// ── AFIRMASI ────────────────────────────────────────────────────────────────
+function renderAfirmasi(){
+  const today=ds(new Date());
+  const inputArea=document.getElementById('afirmasiInputArea');
+  const doneArea=document.getElementById('afirmasiDoneArea');
+  const card=document.getElementById('afirmasiCard');
+  if(!inputArea)return;
+  if(S.afirmasiToday&&S.afirmasiToday.date===today&&S.afirmasiToday.text){
+    inputArea.style.display='none';doneArea.style.display='block';
+    document.getElementById('afirmasiDoneText').textContent='"'+S.afirmasiToday.text+'"';
+    card.classList.add('completed');
+  } else {
+    inputArea.style.display='block';doneArea.style.display='none';
+    card.classList.remove('completed');
+  }
+}
+function submitAfirmasi(){
+  const val=document.getElementById('afirmasiInput').value.trim();
+  if(!val){toast('⚠️ Tulis dulu afirmasi positifmu ya! 🌿');return;}
+  const today=ds(new Date());
+  S.afirmasiToday={date:today,text:val};save();
+  renderAfirmasi();
+  // Also save to journal
+  S.diary.push({id:Date.now(),title:'Afirmasi Harianku',content:val,mood:'🌿',date:today,time:new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}),type:'afirmasi'});
+  save();toast('✅ Afirmasi disimpan! Kamu luar biasa! ♥');
+}
+function editAfirmasi(){
+  const card=document.getElementById('afirmasiCard');
+  document.getElementById('afirmasiInputArea').style.display='block';
+  document.getElementById('afirmasiDoneArea').style.display='none';
+  document.getElementById('afirmasiInput').value=S.afirmasiToday?S.afirmasiToday.text:'';
+  card.classList.remove('completed');
+}
+
+// ── MEDICINE ────────────────────────────────────────────────────────────────
+function renderMedicineCard(){
+  const today=ds(new Date());
+  const btn=document.getElementById('medTakenBtn');
+  const countdown=document.getElementById('medCountdown');
+  if(!btn)return;
+  const taken=S.medicineTaken&&S.medicineTaken.date===today&&S.medicineTaken.taken;
+  if(taken){
+    btn.textContent='✅ Sudah Minum';btn.classList.add('taken');
+  } else {
+    btn.textContent='💊 Tandai Sudah Minum';btn.classList.remove('taken');
+  }
+  // Countdown
+  const now=new Date();
+  const [h,m]=S.medicineTime.split(':').map(Number);
+  const target=new Date();target.setHours(h,m,0,0);
+  if(target<=now)target.setDate(target.getDate()+1);
+  const diff=target-now;
+  const hh=Math.floor(diff/3600000);const mm=Math.floor((diff%3600000)/60000);
+  if(taken){countdown.innerHTML='<span>✅ Sudah minum obat hari ini. Hebat!</span>';}
+  else{countdown.innerHTML=`Obat diminum jam <span class="mc-time">${S.medicineTime}</span> · ${hh}j ${mm}m lagi`;}
+  document.getElementById('medTimeDisplay').textContent=S.medicineTime;
+  document.getElementById('medNameText').textContent=S.medicineName;
+}
+function toggleMedicineTaken(){
+  const today=ds(new Date());
+  const taken=S.medicineTaken&&S.medicineTaken.date===today&&S.medicineTaken.taken;
+  S.medicineTaken={date:today,taken:!taken};save();renderMedicineCard();
+  toast(S.medicineTaken.taken?'💊 Bagus! Obat sudah diminum ♥':'💊 Status obat di-reset');
+}
+setInterval(renderMedicineCard,60000);
+
+// ── DOCTOR SCHEDULE ─────────────────────────────────────────────────────────
+function renderDoctorCard(){
+  const show=document.getElementById('doctorNextShow');
+  if(!show)return;
+  if(S.doctorSchedule){
+    const d=new Date(S.doctorSchedule+'T00:00:00');
+    const today=new Date();today.setHours(0,0,0,0);
+    const diff=Math.ceil((d-today)/(1000*86400));
+    document.getElementById('doctorNextDate').textContent='📅 '+d.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    document.getElementById('doctorNextCountdown').textContent=diff>0?`${diff} hari lagi`:diff===0?'Hari ini!':'Sudah lewat — perbarui jadwal';
+    show.style.display='flex';
+    document.getElementById('doctorDateInput').value=S.doctorSchedule;
+  } else {show.style.display='none';}
+}
+function saveDoctorSchedule(){
+  const val=document.getElementById('doctorDateInput').value;
+  if(!val)return;S.doctorSchedule=val;save();renderDoctorCard();toast('🏥 Jadwal dokter disimpan!');
+}
+
+// ── JOURNAL PERASAAN ─────────────────────────────────────────────────────────
+let journalMoodSelected={mood:3,emoji:'😐'};
+function selJournalMood(n,emoji,el){
+  journalMoodSelected={mood:n,emoji};
+  document.querySelectorAll('#journalMoodScale .ms-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function addJournal(){
+  const situasi=document.getElementById('journalSituasi').value.trim();
+  const perasaan=document.getElementById('journalPerasaan').value.trim();
+  const pikiran=document.getElementById('journalPikiran').value.trim();
+  const syukur=document.getElementById('journalSyukur').value.trim();
+  if(!perasaan&&!situasi){toast('⚠️ Ceritakan setidaknya situasi atau perasaanmu!');return;}
+  const content=[situasi&&('📌 Situasi: '+situasi),perasaan&&('💭 Perasaan: '+perasaan),pikiran&&('🧠 Pikiran: '+pikiran),syukur&&('🙏 Syukur: '+syukur)].filter(Boolean).join('\n');
+  if(!S.journals)S.journals=[];
+  S.journals.push({id:Date.now(),mood:journalMoodSelected.mood,emoji:journalMoodSelected.emoji,content,date:ds(new Date()),time:new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})});
+  document.getElementById('journalSituasi').value='';document.getElementById('journalPerasaan').value='';
+  document.getElementById('journalPikiran').value='';document.getElementById('journalSyukur').value='';
+  save();renderJournals();toast('🌿 Jurnal perasaan disimpan! ♥');
+}
+function delJournal(id){
+  if(!S.journals)return;
+  S.journals=S.journals.filter(j=>j.id!==id);save();renderJournals();toast('🗑️ Jurnal dihapus');
+}
+function renderJournals(){
+  const el=document.getElementById('journalList');if(!el)return;
+  if(!S.journals)S.journals=[];
+  if(!S.journals.length){el.innerHTML='<div class="empty-state"><div class="ei">🌿</div><p>Belum ada jurnal perasaan.\nMulai ceritakan perasaanmu hari ini!</p></div>';return;}
+  el.innerHTML=S.journals.slice().reverse().map(j=>`
+    <div class="diary-card">
+      <div class="diary-date-row"><span class="diary-date">${j.date} · ${j.time}</span><span class="diary-mood">${j.emoji} ${j.mood}/5</span></div>
+      <div class="diary-preview">${j.content.replace(/\n/g,'<br>')}</div>
+      <button class="item-del" onclick="event.stopPropagation();delJournal(${j.id})">✕</button>
+    </div>`).join('');
+}
+
 
 init();
 </script>

@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <style>
 :root{
   --bg:#030b14;
@@ -1237,7 +1236,7 @@ function getDateLabel(dateStr){
 function getPctLabel(pct){return pct>=80?'Luar Biasa':pct>=60?'Baik':pct>=40?'Cukup':'Perlu Ditingkatkan';}
 function pdfAddPage(doc,y,W){if(y>262){doc.addPage();return 20;}return y;}
 
-// ── EXPORT EXCEL (DETAIL) ──────────────────────────────────────────────────
+// ── EXPORT EXCEL (DETAIL + STYLED) ────────────────────────────────────────
 function exportExcel(){
   const wb=XLSX.utils.book_new();
   const today=new Date();
@@ -1246,460 +1245,826 @@ function exportExcel(){
   const doneCnt=S.habits.filter(h=>h.done).length;
   const totalCnt=S.habits.length;
   const pctToday=Math.round((doneCnt/Math.max(totalCnt,1))*100);
-
-  // ── SHEET 1: RINGKASAN EKSEKUTIF ─────────────────────────────────────────
   const avgPct=recs.length>0?Math.round(recs.reduce((a,r)=>a+(r.pct||0),0)/recs.length):0;
   const bestRec=recs.length>0?recs.reduce((a,r)=>(r.pct||0)>(a.pct||0)?r:a,recs[0]):null;
-  const ws1=XLSX.utils.aoa_to_sheet([
-    ['╔══════════════════════════════════════════════╗'],
-    ['        ✦  EUNOIA — LAPORAN REKAP AKTIVITAS'],
-    ['╚══════════════════════════════════════════════╝'],
-    [''],
-    ['INFORMASI LAPORAN'],
+
+  // ── Helper: set cell style ────────────────────────────────────────────────
+  function sc(ws,addr,v,s){
+    if(!ws[addr])ws[addr]={};
+    ws[addr].v=v;
+    ws[addr].s=s;
+    if(typeof v==='number'){ws[addr].t='n';}
+    else{ws[addr].t='s';}
+  }
+
+  // Predefined styles
+  const ST={
+    title:{font:{bold:true,sz:16,color:{rgb:'7DD3FC'}},fill:{fgColor:{rgb:'030B14'}},alignment:{horizontal:'center',vertical:'center'}},
+    subtitle:{font:{bold:true,sz:11,color:{rgb:'22D3EE'}},fill:{fgColor:{rgb:'071525'}},alignment:{horizontal:'center'}},
+    sectionHeader:{font:{bold:true,sz:10,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'0EA5E9'}},alignment:{horizontal:'left',vertical:'center'},border:{bottom:{style:'medium',color:{rgb:'22D3EE'}}}},
+    colHeader:{font:{bold:true,sz:9,color:{rgb:'7DD3FC'}},fill:{fgColor:{rgb:'0C1E30'}},alignment:{horizontal:'center',vertical:'center'},border:{bottom:{style:'thin',color:{rgb:'0EA5E9'}},top:{style:'thin',color:{rgb:'0EA5E9'}}}},
+    label:{font:{bold:true,sz:9,color:{rgb:'7EB8D4'}},fill:{fgColor:{rgb:'071525'}},alignment:{horizontal:'left'}},
+    value:{font:{sz:9,color:{rgb:'E8F4FD'}},fill:{fgColor:{rgb:'0C1E30'}},alignment:{horizontal:'left'}},
+    valueAlt:{font:{sz:9,color:{rgb:'E8F4FD'}},fill:{fgColor:{rgb:'071525'}},alignment:{horizontal:'left'}},
+    valueCenter:{font:{sz:9,color:{rgb:'E8F4FD'}},fill:{fgColor:{rgb:'0C1E30'}},alignment:{horizontal:'center'}},
+    valueCenterAlt:{font:{sz:9,color:{rgb:'E8F4FD'}},fill:{fgColor:{rgb:'071525'}},alignment:{horizontal:'center'}},
+    done:{font:{bold:true,sz:9,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'059669'}},alignment:{horizontal:'center'}},
+    pending:{font:{bold:true,sz:9,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'B91C1C'}},alignment:{horizontal:'center'}},
+    pctGood:{font:{bold:true,sz:9,color:{rgb:'34D399'}},fill:{fgColor:{rgb:'0C1E30'}},alignment:{horizontal:'center'}},
+    pctMid:{font:{bold:true,sz:9,color:{rgb:'0EA5E9'}},fill:{fgColor:{rgb:'0C1E30'}},alignment:{horizontal:'center'}},
+    pctLow:{font:{bold:true,sz:9,color:{rgb:'F87171'}},fill:{fgColor:{rgb:'0C1E30'}},alignment:{horizontal:'center'}},
+    pctGoodAlt:{font:{bold:true,sz:9,color:{rgb:'34D399'}},fill:{fgColor:{rgb:'071525'}},alignment:{horizontal:'center'}},
+    pctMidAlt:{font:{bold:true,sz:9,color:{rgb:'0EA5E9'}},fill:{fgColor:{rgb:'071525'}},alignment:{horizontal:'center'}},
+    pctLowAlt:{font:{bold:true,sz:9,color:{rgb:'F87171'}},fill:{fgColor:{rgb:'071525'}},alignment:{horizontal:'center'}},
+    blank:{font:{sz:9},fill:{fgColor:{rgb:'030B14'}}},
+    muted:{font:{sz:8,color:{rgb:'3A6A82'}},fill:{fgColor:{rgb:'030B14'}},alignment:{horizontal:'center'}},
+  };
+  function pctStyle(pct,alt){return pct>=70?(alt?ST.pctGoodAlt:ST.pctGood):pct>=40?(alt?ST.pctMidAlt:ST.pctMid):(alt?ST.pctLowAlt:ST.pctLow);}
+  function altStyle(alt){return alt?ST.valueAlt:ST.value;}
+  function altCenterStyle(alt){return alt?ST.valueCenterAlt:ST.valueCenter;}
+
+  // ── SHEET 1: RINGKASAN EKSEKUTIF ─────────────────────────────────────────
+  const ws1={};
+  // Title block
+  ws1['A1']={v:'✦ EUNOIA — LAPORAN REKAP AKTIVITAS',t:'s',s:ST.title};
+  ws1['A2']={v:'Beautiful Mind · Personal Growth Dashboard',t:'s',s:ST.subtitle};
+  ws1['A3']={v:'',t:'s',s:ST.blank};
+
+  // Info section
+  ws1['A4']={v:'INFORMASI LAPORAN',t:'s',s:ST.sectionHeader};
+  const info=[
     ['Nama Pengguna', S.userName||'—'],
     ['Tanggal Ekspor', todayStr],
     ['Periode Laporan', S.exportPeriod],
     ['Dibuat pada', today.toLocaleTimeString('id-ID')],
-    [''],
-    ['RINGKASAN PERFORMA'],
+  ];
+  info.forEach((row,i)=>{
+    const alt=i%2===0;
+    ws1[`A${5+i}`]={v:row[0],t:'s',s:alt?ST.label:{...ST.label,fill:{fgColor:{rgb:'0C1E30'}}}};
+    ws1[`B${5+i}`]={v:row[1],t:'s',s:altStyle(!alt)};
+    ws1[`C${5+i}`]={v:'',t:'s',s:altStyle(!alt)};
+  });
+
+  ws1['A9']={v:'',t:'s',s:ST.blank};
+  ws1['A10']={v:'RINGKASAN PERFORMA',t:'s',s:ST.sectionHeader};
+  const perf=[
     ['Total Habit Terdaftar', totalCnt, 'habit'],
     ['Habit Selesai Hari Ini', doneCnt, 'habit'],
     ['Progress Hari Ini', pctToday+'%', getPctLabel(pctToday)],
     ['Streak Berturut-turut', S.streak, 'hari'],
     ['Rata-rata Progress ('+S.exportPeriod+')', avgPct+'%', getPctLabel(avgPct)],
     ['Hari Terbaik', bestRec?getDateLabel(bestRec.date):'—', bestRec?(bestRec.pct+'%'):''],
-    ['Total Catatan Harian (Diary)', S.diary.length, 'entri'],
-    ['Total Goals/Tujuan', S.goals.length, 'tujuan'],
+    ['Total Diary', S.diary.length, 'entri'],
+    ['Total Goals', S.goals.length, 'tujuan'],
     ['Total Jurnal Perasaan', (S.journals||[]).length, 'entri'],
-    [''],
-    ['RINGKASAN HABIT PER KATEGORI'],
-    ['Kategori','Jumlah Habit','Selesai Hari Ini','% Selesai'],
-    ...CATS.map(cat=>{
-      const items=S.habits.filter(h=>h.cat===cat.id);
-      const catDone=items.filter(h=>h.done).length;
-      const catPct=items.length>0?Math.round((catDone/items.length)*100):0;
-      return [cat.icon+' '+cat.id, items.length, catDone, catPct+'%'];
-    }),
-    [''],
-    ['STATUS HARI INI'],
+  ];
+  perf.forEach((row,i)=>{
+    const alt=i%2===0;
+    const r=11+i;
+    ws1[`A${r}`]={v:row[0],t:'s',s:alt?ST.label:{...ST.label,fill:{fgColor:{rgb:'0C1E30'}}}};
+    ws1[`B${r}`]={v:row[1],t:typeof row[1]==='number'?'n':'s',s:altStyle(!alt)};
+    ws1[`C${r}`]={v:row[2]||'',t:'s',s:{...altStyle(!alt),font:{...altStyle(!alt).font,color:{rgb:'3A6A82'}}}};
+  });
+
+  ws1['A20']={v:'',t:'s',s:ST.blank};
+  ws1['A21']={v:'REKAP HABIT PER KATEGORI',t:'s',s:ST.sectionHeader};
+  const catHeaders=['Kategori','Jumlah Habit','Selesai','% Selesai'];
+  catHeaders.forEach((h,i)=>{ws1[`${['A','B','C','D'][i]}22`]={v:h,t:'s',s:ST.colHeader};});
+  CATS.forEach((cat,i)=>{
+    const items=S.habits.filter(h=>h.cat===cat.id);
+    const catDone=items.filter(h=>h.done).length;
+    const catPct=items.length>0?Math.round((catDone/items.length)*100):0;
+    const alt=i%2===0;const r=23+i;
+    ws1[`A${r}`]={v:cat.icon+' '+cat.id,t:'s',s:altStyle(alt)};
+    ws1[`B${r}`]={v:items.length,t:'n',s:altCenterStyle(alt)};
+    ws1[`C${r}`]={v:catDone,t:'n',s:altCenterStyle(alt)};
+    ws1[`D${r}`]={v:catPct+'%',t:'s',s:pctStyle(catPct,alt)};
+  });
+
+  const sr2=23+CATS.length+1;
+  ws1[`A${sr2}`]={v:'',t:'s',s:ST.blank};
+  ws1[`A${sr2+1}`]={v:'STATUS HARI INI',t:'s',s:ST.sectionHeader};
+  const statusRows=[
     ['Mood', S.moodToday&&S.moodToday.mood>0?(S.moodToday.emoji+' '+S.moodToday.mood+'/5'):'Belum diisi'],
-    ['Afirmasi', S.afirmasiToday&&S.afirmasiToday.text?'"'+S.afirmasiToday.text+'"':'Belum diisi'],
-    ['Minum Obat', S.medicineTaken&&S.medicineTaken.taken?'✅ Sudah':'❌ Belum'],
-    ['Jadwal Dokter', S.doctorSchedule?S.doctorSchedule:'Belum diatur'],
-  ]);
-  ws1['!cols']=[{wch:34},{wch:38},{wch:22}];
+    ['Afirmasi Positif', S.afirmasiToday&&S.afirmasiToday.text?'"'+S.afirmasiToday.text+'"':'Belum diisi'],
+    ['Minum Obat ('+S.medicineName+')', S.medicineTaken&&S.medicineTaken.taken?'✅ Sudah diminum':'❌ Belum diminum'],
+    ['Jadwal Dokter', S.doctorSchedule||'Belum diatur'],
+  ];
+  statusRows.forEach((row,i)=>{
+    const alt=i%2===0; const r=sr2+2+i;
+    ws1[`A${r}`]={v:row[0],t:'s',s:alt?ST.label:{...ST.label,fill:{fgColor:{rgb:'0C1E30'}}}};
+    ws1[`B${r}`]={v:row[1],t:'s',s:altStyle(!alt)};
+    ws1[`C${r}`]={v:'',t:'s',s:altStyle(!alt)};
+  });
+
+  // Set range + merge title cells
+  const lastRow=sr2+6;
+  ws1['!ref']=`A1:D${lastRow}`;
+  ws1['!merges']=[{s:{r:0,c:0},e:{r:0,c:3}},{s:{r:1,c:0},e:{r:1,c:3}},{s:{r:3,c:0},e:{r:3,c:3}},{s:{r:9,c:0},e:{r:9,c:3}},{s:{r:20,c:0},e:{r:20,c:3}},{s:{r:sr2,c:0},e:{r:sr2,c:3}},{s:{r:sr2+1,c:0},e:{r:sr2+1,c:3}}];
+  ws1['!cols']=[{wch:36},{wch:40},{wch:16},{wch:14}];
+  ws1['!rows']=[{hpt:28},{hpt:18}];
   XLSX.utils.book_append_sheet(wb,ws1,'📊 Ringkasan');
 
   // ── SHEET 2: DETAIL HABIT HARI INI ───────────────────────────────────────
-  const habitRows=[
-    ['No','Habit / Kebiasaan','Kategori','Status Hari Ini','Keterangan'],
-    ...S.habits.map((h,i)=>[
-      i+1,
-      h.title,
-      h.cat,
-      h.done?'✅ Selesai':'⏳ Belum Selesai',
-      h.done?'Habit berhasil diselesaikan hari ini':'Masih perlu dikerjakan'
-    ])
-  ];
-  const ws2=XLSX.utils.aoa_to_sheet(habitRows);
-  ws2['!cols']=[{wch:5},{wch:38},{wch:16},{wch:20},{wch:36}];
+  const ws2={};
+  ws2['A1']={v:'✅ DETAIL HABIT HARI INI',t:'s',s:ST.title};
+  ws2['A2']={v:todayStr,t:'s',s:ST.subtitle};
+  const hCols=['A','B','C','D','E'];
+  const hHeaders=['No','Habit / Kebiasaan','Kategori','Status','Keterangan'];
+  hHeaders.forEach((h,i)=>{ws2[`${hCols[i]}3`]={v:h,t:'s',s:ST.colHeader};});
+  S.habits.forEach((h,i)=>{
+    const alt=i%2===0; const r=4+i;
+    ws2[`A${r}`]={v:i+1,t:'n',s:{...altCenterStyle(alt),font:{...altCenterStyle(alt).font,bold:true}}};
+    ws2[`B${r}`]={v:h.title,t:'s',s:altStyle(alt)};
+    ws2[`C${r}`]={v:h.cat,t:'s',s:altCenterStyle(alt)};
+    ws2[`D${r}`]={v:h.done?'✅ Selesai':'⏳ Pending',t:'s',s:h.done?ST.done:ST.pending};
+    ws2[`E${r}`]={v:h.done?'Habit berhasil diselesaikan hari ini':'Masih perlu dikerjakan',t:'s',s:{...altStyle(alt),font:{...altStyle(alt).font,color:{rgb:h.done?'34D399':'F87171'}}}};
+  });
+  const ws2LastRow=3+S.habits.length+1;
+  ws2[`A${ws2LastRow}`]={v:`Progress hari ini: ${pctToday}% (${doneCnt}/${totalCnt} habit selesai)`,t:'s',s:{...ST.sectionHeader,alignment:{horizontal:'center'}}};
+  ws2['!ref']=`A1:E${ws2LastRow}`;
+  ws2['!merges']=[{s:{r:0,c:0},e:{r:0,c:4}},{s:{r:1,c:0},e:{r:1,c:4}},{s:{r:ws2LastRow-1,c:0},e:{r:ws2LastRow-1,c:4}}];
+  ws2['!cols']=[{wch:5},{wch:40},{wch:16},{wch:16},{wch:38}];
+  ws2['!rows']=[{hpt:24},{hpt:16}];
   XLSX.utils.book_append_sheet(wb,ws2,'✅ Habit Hari Ini');
 
-  // ── SHEET 3: REKAP HISTORIS DETAIL ───────────────────────────────────────
-  const recapHeader=['Tanggal','Hari','Total Habit','Selesai','Belum','Progress (%)','Status','Keterangan'];
-  const recapRows=recs.map(r=>{
+  // ── SHEET 3: REKAP HISTORIS ───────────────────────────────────────────────
+  const ws3={};
+  ws3['A1']={v:'📅 REKAP '+S.exportPeriod.toUpperCase()+' — '+S.habits.length+' HABIT TERDAFTAR',t:'s',s:ST.title};
+  ws3['A2']={v:`Rata-rata: ${avgPct}% · ${recs.length} hari tercatat`,t:'s',s:ST.subtitle};
+  const rCols=['A','B','C','D','E','F','G','H'];
+  const rHeaders=['Tanggal','Hari','Total','Selesai','Belum','Progress','Status','Keterangan'];
+  rHeaders.forEach((h,i)=>{ws3[`${rCols[i]}3`]={v:h,t:'s',s:ST.colHeader};});
+  recs.forEach((r,i)=>{
     const d=new Date((r.date||ds(today))+'T00:00:00');
+    const pct=r.pct||0; const alt=i%2===0; const row=4+i;
     const pending=(r.total||0)-(r.done||0);
-    return [
-      r.date||ds(today),
-      DAYS()[d.getDay()]||'—',
-      r.total||0,
-      r.done||0,
-      pending,
-      (r.pct||0)+'%',
-      getPctLabel(r.pct||0),
-      (r.pct||0)>=80?'Konsisten & Produktif':(r.pct||0)>=60?'Performa Baik':(r.pct||0)>=40?'Perlu Ditingkatkan':'Butuh Perhatian Ekstra'
-    ];
+    ws3[`A${row}`]={v:r.date||ds(today),t:'s',s:altStyle(alt)};
+    ws3[`B${row}`]={v:DAYS()[d.getDay()]||'—',t:'s',s:altCenterStyle(alt)};
+    ws3[`C${row}`]={v:r.total||0,t:'n',s:altCenterStyle(alt)};
+    ws3[`D${row}`]={v:r.done||0,t:'n',s:{...altCenterStyle(alt),font:{...altCenterStyle(alt).font,color:{rgb:'34D399'},bold:true}}};
+    ws3[`E${row}`]={v:pending,t:'n',s:{...altCenterStyle(alt),font:{...altCenterStyle(alt).font,color:pending>0?{rgb:'F87171'}:{rgb:'34D399'}}}};
+    ws3[`F${row}`]={v:pct+'%',t:'s',s:pctStyle(pct,alt)};
+    ws3[`G${row}`]={v:getPctLabel(pct),t:'s',s:pctStyle(pct,alt)};
+    ws3[`H${row}`]={v:pct>=80?'Konsisten & Produktif':pct>=60?'Performa Baik':pct>=40?'Perlu Ditingkatkan':'Butuh Perhatian',t:'s',s:altStyle(alt)};
   });
-  const ws3=XLSX.utils.aoa_to_sheet([recapHeader,...recapRows]);
-  ws3['!cols']=[{wch:14},{wch:10},{wch:14},{wch:12},{wch:12},{wch:14},{wch:20},{wch:30}];
+  const ws3Last=3+recs.length+1;
+  ws3['!ref']=`A1:H${ws3Last}`;
+  ws3['!merges']=[{s:{r:0,c:0},e:{r:0,c:7}},{s:{r:1,c:0},e:{r:1,c:7}}];
+  ws3['!cols']=[{wch:14},{wch:8},{wch:8},{wch:10},{wch:8},{wch:11},{wch:20},{wch:28}];
+  ws3['!rows']=[{hpt:24},{hpt:16}];
   XLSX.utils.book_append_sheet(wb,ws3,'📅 Rekap '+S.exportPeriod);
 
-  // ── SHEET 4: DETAIL HABIT PER HARI (jika ada snapshot) ──────────────────
-  const snapRows=[['Tanggal','Habit','Kategori','Status']];
+  // ── SHEET 4: DETAIL HABIT PER HARI ───────────────────────────────────────
+  const snapRows2=[];let hasSnap=false;
   recs.forEach(r=>{
     if(r.snapshot&&r.snapshot.length>0){
-      r.snapshot.forEach(h=>{
-        snapRows.push([r.date,h.title,h.cat,h.done?'✅ Selesai':'❌ Belum']);
-      });
-      snapRows.push(['','','','']); // spacer
+      hasSnap=true;
+      r.snapshot.forEach(h=>{snapRows2.push([r.date,h.title,h.cat,h.done?'✅ Selesai':'❌ Belum']);});
+      snapRows2.push(['','','','']);
     }
   });
-  if(snapRows.length>1){
-    const ws3b=XLSX.utils.aoa_to_sheet(snapRows);
-    ws3b['!cols']=[{wch:14},{wch:38},{wch:16},{wch:16}];
+  if(hasSnap){
+    const ws3b={};
+    ws3b['A1']={v:'🔍 DETAIL HABIT PER HARI',t:'s',s:ST.title};
+    const snCols=['A','B','C','D'];
+    ['Tanggal','Habit','Kategori','Status'].forEach((h,i)=>{ws3b[`${snCols[i]}2`]={v:h,t:'s',s:ST.colHeader};});
+    let lastDate='';let altBlock=true;
+    snapRows2.forEach((row,i)=>{
+      const r=3+i;
+      if(row[0]&&row[0]!==lastDate){lastDate=row[0];altBlock=!altBlock;}
+      const alt=altBlock;
+      ws3b[`A${r}`]={v:row[0],t:'s',s:altStyle(alt)};
+      ws3b[`B${r}`]={v:row[1],t:'s',s:altStyle(alt)};
+      ws3b[`C${r}`]={v:row[2],t:'s',s:altCenterStyle(alt)};
+      ws3b[`D${r}`]={v:row[3],t:'s',s:row[3]==='✅ Selesai'?ST.done:row[3]===''?ST.blank:ST.pending};
+    });
+    ws3b['!ref']=`A1:D${2+snapRows2.length+1}`;
+    ws3b['!merges']=[{s:{r:0,c:0},e:{r:0,c:3}}];
+    ws3b['!cols']=[{wch:14},{wch:40},{wch:16},{wch:16}];
+    ws3b['!rows']=[{hpt:24}];
     XLSX.utils.book_append_sheet(wb,ws3b,'🔍 Detail Habit Per Hari');
   }
 
-  // ── SHEET 5: GOALS / TUJUAN ───────────────────────────────────────────────
-  const ws4=XLSX.utils.aoa_to_sheet([
-    ['No','Periode','Tujuan / Goal','Tanggal Dibuat','Keterangan'],
-    ...(S.goals.length>0?S.goals.map((g,i)=>[
-      i+1, g.period, g.text, g.date,
-      g.period==='Harian'?'Target harian':g.period==='Mingguan'?'Target 7 hari ke depan':g.period==='Bulanan'?'Target sebulan ke depan':'Target jangka panjang'
-    ]):[['—','—','Belum ada goals','—','Mulai tambahkan goals kamu!']])
-  ]);
-  ws4['!cols']=[{wch:5},{wch:14},{wch:54},{wch:16},{wch:30}];
+  // ── SHEET 5: GOALS ───────────────────────────────────────────────────────
+  const ws4={};
+  ws4['A1']={v:'🎯 GOALS / TUJUAN HIDUP',t:'s',s:ST.title};
+  ws4['A2']={v:S.goals.length+' goals tersimpan',t:'s',s:ST.subtitle};
+  ['No','Periode','Tujuan / Goal','Tanggal Dibuat','Keterangan'].forEach((h,i)=>{
+    ws4[`${['A','B','C','D','E'][i]}3`]={v:h,t:'s',s:ST.colHeader};
+  });
+  if(S.goals.length===0){ws4['A4']={v:'Belum ada goals. Mulai tambahkan tujuan hidupmu!',t:'s',s:ST.muted};}
+  else{
+    S.goals.forEach((g,i)=>{
+      const alt=i%2===0;const r=4+i;
+      ws4[`A${r}`]={v:i+1,t:'n',s:{...altCenterStyle(alt),font:{...altCenterStyle(alt).font,bold:true}}};
+      ws4[`B${r}`]={v:g.period,t:'s',s:{...altCenterStyle(alt),font:{...altCenterStyle(alt).font,color:{rgb:'22D3EE'}}}};
+      ws4[`C${r}`]={v:g.text,t:'s',s:altStyle(alt)};
+      ws4[`D${r}`]={v:g.date,t:'s',s:altCenterStyle(alt)};
+      ws4[`E${r}`]={v:g.period==='Harian'?'Target harian':g.period==='Mingguan'?'Target 7 hari':g.period==='Bulanan'?'Target sebulan':'Target jangka panjang',t:'s',s:{...altStyle(alt),font:{...altStyle(alt).font,color:{rgb:'3A6A82'}}}};
+    });
+  }
+  const ws4Last=3+(S.goals.length||1)+1;
+  ws4['!ref']=`A1:E${ws4Last}`;
+  ws4['!merges']=[{s:{r:0,c:0},e:{r:0,c:4}},{s:{r:1,c:0},e:{r:1,c:4}}];
+  ws4['!cols']=[{wch:5},{wch:14},{wch:56},{wch:16},{wch:28}];
+  ws4['!rows']=[{hpt:24},{hpt:16}];
   XLSX.utils.book_append_sheet(wb,ws4,'🎯 Goals');
 
-  // ── SHEET 6: DIARY / CATATAN HARIAN ──────────────────────────────────────
-  const ws5=XLSX.utils.aoa_to_sheet([
-    ['No','Tanggal','Waktu','Mood','Judul','Isi Catatan'],
-    ...(S.diary.length>0?S.diary.slice().reverse().map((d,i)=>[
-      i+1, d.date, d.time, d.mood, d.title, d.content
-    ]):[['—','—','—','—','Belum ada diary','Mulai ceritakan harimu!']])
-  ]);
-  ws5['!cols']=[{wch:5},{wch:14},{wch:10},{wch:8},{wch:30},{wch:70}];
+  // ── SHEET 6: DIARY ────────────────────────────────────────────────────────
+  const ws5={};
+  ws5['A1']={v:'📖 DIARY / CATATAN HARIAN',t:'s',s:ST.title};
+  ws5['A2']={v:S.diary.length+' entri diary tersimpan',t:'s',s:ST.subtitle};
+  ['No','Tanggal','Waktu','Mood','Judul','Isi Catatan'].forEach((h,i)=>{
+    ws5[`${['A','B','C','D','E','F'][i]}3`]={v:h,t:'s',s:ST.colHeader};
+  });
+  if(S.diary.length===0){ws5['A4']={v:'Belum ada diary. Mulai ceritakan harimu!',t:'s',s:ST.muted};}
+  else{
+    S.diary.slice().reverse().forEach((d,i)=>{
+      const alt=i%2===0;const r=4+i;
+      ws5[`A${r}`]={v:i+1,t:'n',s:altCenterStyle(alt)};
+      ws5[`B${r}`]={v:d.date,t:'s',s:altCenterStyle(alt)};
+      ws5[`C${r}`]={v:d.time,t:'s',s:altCenterStyle(alt)};
+      ws5[`D${r}`]={v:d.mood,t:'s',s:{...altCenterStyle(alt),font:{...altCenterStyle(alt).font,sz:14}}};
+      ws5[`E${r}`]={v:d.title,t:'s',s:{...altStyle(alt),font:{...altStyle(alt).font,bold:true,color:{rgb:'7DD3FC'}}}};
+      ws5[`F${r}`]={v:d.content,t:'s',s:{...altStyle(alt),alignment:{...altStyle(alt).alignment,wrapText:true}}};
+    });
+  }
+  const ws5Last=3+(S.diary.length||1)+1;
+  ws5['!ref']=`A1:F${ws5Last}`;
+  ws5['!merges']=[{s:{r:0,c:0},e:{r:0,c:5}},{s:{r:1,c:0},e:{r:1,c:5}}];
+  ws5['!cols']=[{wch:5},{wch:14},{wch:10},{wch:8},{wch:30},{wch:72}];
+  ws5['!rows']=[{hpt:24},{hpt:16}];
   XLSX.utils.book_append_sheet(wb,ws5,'📖 Diary');
 
   // ── SHEET 7: JURNAL PERASAAN ──────────────────────────────────────────────
   const journals=S.journals||[];
-  const ws6=XLSX.utils.aoa_to_sheet([
-    ['No','Tanggal','Waktu','Mood (1-5)','Emoji','Isi Jurnal'],
-    ...(journals.length>0?journals.slice().reverse().map((j,i)=>[
-      i+1, j.date, j.time, j.mood, j.emoji, j.content
-    ]):[['—','—','—','—','—','Belum ada jurnal perasaan']])
-  ]);
-  ws6['!cols']=[{wch:5},{wch:14},{wch:10},{wch:12},{wch:8},{wch:80}];
+  const ws6={};
+  ws6['A1']={v:'🌿 JURNAL PERASAAN',t:'s',s:ST.title};
+  ws6['A2']={v:journals.length+' entri jurnal tersimpan',t:'s',s:ST.subtitle};
+  ['No','Tanggal','Waktu','Mood','Emoji','Isi Jurnal'].forEach((h,i)=>{
+    ws6[`${['A','B','C','D','E','F'][i]}3`]={v:h,t:'s',s:ST.colHeader};
+  });
+  if(journals.length===0){ws6['A4']={v:'Belum ada jurnal perasaan.',t:'s',s:ST.muted};}
+  else{
+    journals.slice().reverse().forEach((j,i)=>{
+      const alt=i%2===0;const r=4+i;
+      const moodColor=j.mood>=4?{rgb:'34D399'}:j.mood>=3?{rgb:'FBBF24'}:{rgb:'F87171'};
+      ws6[`A${r}`]={v:i+1,t:'n',s:altCenterStyle(alt)};
+      ws6[`B${r}`]={v:j.date,t:'s',s:altCenterStyle(alt)};
+      ws6[`C${r}`]={v:j.time,t:'s',s:altCenterStyle(alt)};
+      ws6[`D${r}`]={v:j.mood+'/5',t:'s',s:{...altCenterStyle(alt),font:{...altCenterStyle(alt).font,bold:true,color:moodColor}}};
+      ws6[`E${r}`]={v:j.emoji,t:'s',s:{...altCenterStyle(alt),font:{...altCenterStyle(alt).font,sz:14}}};
+      ws6[`F${r}`]={v:j.content,t:'s',s:{...altStyle(alt),alignment:{...altStyle(alt).alignment,wrapText:true}}};
+    });
+  }
+  const ws6Last=3+(journals.length||1)+1;
+  ws6['!ref']=`A1:F${ws6Last}`;
+  ws6['!merges']=[{s:{r:0,c:0},e:{r:0,c:5}},{s:{r:1,c:0},e:{r:1,c:5}}];
+  ws6['!cols']=[{wch:5},{wch:14},{wch:10},{wch:10},{wch:8},{wch:80}];
+  ws6['!rows']=[{hpt:24},{hpt:16}];
   XLSX.utils.book_append_sheet(wb,ws6,'🌿 Jurnal Perasaan');
 
-  XLSX.writeFile(wb,`Eunoia_Rekap_${S.exportPeriod}_${ds(today)}.xlsx`);
+  // Write with cellStyles option
+  XLSX.writeFile(wb,`Eunoia_Rekap_${S.exportPeriod}_${ds(today)}.xlsx`,{cellStyles:true});
   toast(t('excel-ok'));
 }
 
 // ── EXPORT PDF (DETAIL & RAPI) ─────────────────────────────────────────────
-async function exportPDF(){
-  const {jsPDF}=window.jspdf;
-  const doc=new jsPDF({unit:'mm',format:'a4'});
+function exportPDF(){
   const today=new Date();
-  const W=doc.internal.pageSize.getWidth();
-  const H=doc.internal.pageSize.getHeight();
+  const allRecs=S.history||[];
   const recs=getHistRecs();
   const doneCnt=S.habits.filter(h=>h.done).length;
   const totalCnt=S.habits.length;
   const pctToday=Math.round((doneCnt/Math.max(totalCnt,1))*100);
   const avgPct=recs.length>0?Math.round(recs.reduce((a,r)=>a+(r.pct||0),0)/recs.length):0;
+  const bestRec=recs.length>0?recs.reduce((a,r)=>(r.pct||0)>(a.pct||0)?r:a,recs[0]):null;
+  const todayStr=today.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const journals=S.journals||[];
 
-  // ─── HELPER FUNCTIONS ─────────────────────────────────────────────────────
-  function newPage(){doc.addPage();}
-  function drawHeader(pageTitle){
-    // Full dark header bar
-    doc.setFillColor(3,11,20);doc.rect(0,0,W,44,'F');
-    // Accent left strip
-    doc.setFillColor(14,165,233);doc.rect(0,0,4,44,'F');
-    // Logo box
-    doc.setFillColor(14,165,233);doc.roundedRect(10,8,26,26,4,4,'F');
-    doc.setFontSize(14);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');
-    doc.text('EU',23,24,{align:'center'});
-    // App name
-    doc.setFontSize(18);doc.setTextColor(125,211,252);doc.setFont('helvetica','bold');
-    doc.text('EUNOIA',42,18);
-    doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(58,106,130);
-    doc.text('Beautiful Mind — Personal Growth Dashboard',42,25);
-    // Page title pill
-    doc.setFillColor(14,165,233,0.2);doc.setFillColor(7,21,37);
-    doc.roundedRect(42,28,120,10,3,3,'F');
-    doc.setFontSize(8);doc.setTextColor(34,211,238);doc.setFont('helvetica','bold');
-    doc.text(pageTitle,102,34.5,{align:'center'});
-    // Date on the right
-    doc.setFontSize(8);doc.setTextColor(58,106,130);doc.setFont('helvetica','normal');
-    doc.text(today.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),W-12,18,{align:'right'});
-    doc.text('Periode: '+S.exportPeriod,W-12,25,{align:'right'});
-    doc.text('Pengguna: '+S.userName,W-12,32,{align:'right'});
-    // Bottom border of header
-    doc.setDrawColor(14,165,233);doc.setLineWidth(0.4);doc.line(0,44,W,44);
-  }
-  function drawSectionTitle(title,y,icon){
-    doc.setFillColor(7,21,37);doc.roundedRect(12,y-5,W-24,10,2,2,'F');
-    doc.setDrawColor(14,165,233);doc.setLineWidth(0.3);doc.line(12,y-5,16,y-5);doc.line(12,y-5,12,y+5);
-    doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(14,165,233);
-    doc.text((icon?icon+' ':'')+title,18,y+1);
-    return y+10;
-  }
-  function drawFooter(page,total){
-    doc.setFillColor(7,21,37);doc.rect(0,H-10,W,10,'F');
-    doc.setFontSize(7);doc.setFont('helvetica','normal');
-    doc.setTextColor(58,106,130);
-    doc.text('Eunoia — Beautiful Mind · Laporan '+S.exportPeriod+' · Dibuat: '+today.toLocaleString('id-ID'),14,H-4);
-    doc.setTextColor(14,165,233);
-    doc.text('Hal '+page+' / '+total,W-14,H-4,{align:'right'});
-  }
-  function colorByPct(pct){return pct>=80?[52,211,153]:pct>=60?[14,165,233]:pct>=40?[251,191,36]:[248,113,113];}
-  function miniBar(x,y,w,h,pct){
-    doc.setFillColor(20,40,60);doc.roundedRect(x,y,w,h,1,1,'F');
-    const fillW=Math.max((pct/100)*w,1);
-    const c=colorByPct(pct);doc.setFillColor(...c);doc.roundedRect(x,y,fillW,h,1,1,'F');
-  }
+  function pctColor(p){return p>=80?'#34d399':p>=60?'#0ea5e9':p>=40?'#fbbf24':'#f87171';}
+  function pctLabel(p){return p>=80?'Luar Biasa ✦':p>=60?'Baik':p>=40?'Cukup':'Perlu Ditingkatkan';}
+  function pctBg(p){return p>=80?'#d1fae5':p>=60?'#dbeafe':p>=40?'#fef3c7':'#fee2e2';}
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // PAGE 1 — COVER & RINGKASAN EKSEKUTIF
-  // ═══════════════════════════════════════════════════════════════════════════
-  drawHeader('LAPORAN REKAP AKTIVITAS — '+S.exportPeriod.toUpperCase());
-  let y=52;
-
-  // User card
-  doc.setFillColor(7,21,37);doc.roundedRect(12,y,W-24,24,4,4,'F');
-  doc.setDrawColor(14,165,233);doc.setLineWidth(0.5);doc.roundedRect(12,y,W-24,24,4,4,'S');
-  doc.setFillColor(14,165,233);doc.circle(26,y+12,8,'F');
-  doc.setFontSize(12);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');
-  doc.text((S.userName||'U').charAt(0).toUpperCase(),26,y+14.5,{align:'center'});
-  doc.setFontSize(13);doc.setTextColor(232,244,253);doc.setFont('helvetica','bold');
-  doc.text(S.userName||'Eunoia User',40,y+9);
-  doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(125,211,252);
-  doc.text('Streak: '+S.streak+' hari berturut-turut',40,y+15);
-  doc.text('Total habit: '+totalCnt+' · Goals: '+S.goals.length+' · Diary: '+S.diary.length+' entri',40,y+21);
-  // Pct badge
-  const pc=colorByPct(pctToday);doc.setFillColor(...pc);doc.roundedRect(W-38,y+4,24,16,3,3,'F');
-  doc.setFontSize(14);doc.setFont('helvetica','bold');doc.setTextColor(255,255,255);
-  doc.text(pctToday+'%',W-26,y+13,{align:'center'});
-  doc.setFontSize(7);doc.text('HARI INI',W-26,y+18,{align:'center'});
-  y+=30;
-
-  // Stat cards row
-  const statCards=[
-    {label:'Total Habit',val:String(totalCnt),sub:'Terdaftar',c:[14,165,233]},
-    {label:'Selesai Hari Ini',val:String(doneCnt),sub:'Dari '+totalCnt+' habit',c:[52,211,153]},
-    {label:'Progress Hari Ini',val:pctToday+'%',sub:getPctLabel(pctToday),c:colorByPct(pctToday)},
-    {label:'Rata-rata '+S.exportPeriod,val:avgPct+'%',sub:recs.length+' hari tercatat',c:colorByPct(avgPct)},
-  ];
-  const cw=(W-28)/4-3;
-  statCards.forEach((s,i)=>{
-    const x=12+i*(cw+4);
-    doc.setFillColor(7,21,37);doc.roundedRect(x,y,cw,26,3,3,'F');
-    doc.setFillColor(...s.c);doc.roundedRect(x,y,cw,4,3,3,'F');doc.rect(x,y+2,cw,2,'F');
-    doc.setFontSize(14);doc.setFont('helvetica','bold');doc.setTextColor(...s.c);
-    doc.text(s.val,x+cw/2,y+15,{align:'center'});
-    doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(125,211,252);
-    doc.text(s.label,x+cw/2,y+21,{align:'center'});
-    doc.setFontSize(6.5);doc.setFont('helvetica','normal');doc.setTextColor(58,106,130);
-    doc.text(s.sub,x+cw/2,y+25,{align:'center'});
-  });
-  y+=32;
-
-  // Status Harian
-  y=drawSectionTitle('STATUS HARI INI',y,'◆');
-  const statusItems=[
-    {label:'Mood',val:S.moodToday&&S.moodToday.mood>0?(S.moodToday.emoji+' '+S.moodToday.mood+'/5'):'Belum diisi',ok:S.moodToday&&S.moodToday.mood>0},
-    {label:'Afirmasi Positif',val:S.afirmasiToday&&S.afirmasiToday.text?'"'+S.afirmasiToday.text.substring(0,50)+(S.afirmasiToday.text.length>50?'...':'')+'"':'Belum diisi',ok:S.afirmasiToday&&S.afirmasiToday.text},
-    {label:'Minum Obat ('+S.medicineName+')',val:S.medicineTaken&&S.medicineTaken.taken?'Sudah diminum':'Belum diminum',ok:S.medicineTaken&&S.medicineTaken.taken},
-    {label:'Jadwal Dokter',val:S.doctorSchedule||'Belum diatur',ok:!!S.doctorSchedule},
-  ];
-  statusItems.forEach((item,i)=>{
-    if(y>H-22){newPage();drawHeader('STATUS HARIAN (lanjutan)');y=52;}
-    if(i%2===0){doc.setFillColor(7,21,37);doc.rect(12,y-3.5,W-24,8,'F');}
-    const ok=item.ok;
-    doc.setFillColor(...(ok?[52,211,153]:[248,113,113]));
-    doc.circle(18,y+0.5,2.5,'F');
-    doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(125,211,252);
-    doc.text(item.label,24,y+1.5);
-    doc.setFont('helvetica','normal');doc.setTextColor(ok?52:248,ok?211:113,ok?153:113);
-    doc.text(item.val.substring(0,60),W-12,y+1.5,{align:'right'});
-    y+=8;
-  });
-  y+=6;
-
-  // Habit per Kategori
-  y=drawSectionTitle('REKAP HABIT PER KATEGORI',y,'◆');
-  CATS.forEach(cat=>{
-    if(y>H-20){newPage();drawHeader('REKAP HABIT (lanjutan)');y=52;}
+  // Build category summary rows
+  const catRowsHTML=CATS.map((cat,i)=>{
     const items=S.habits.filter(h=>h.cat===cat.id);
-    if(items.length===0)return;
+    if(!items.length)return '';
     const catDone=items.filter(h=>h.done).length;
     const catPct=Math.round((catDone/items.length)*100);
-    doc.setFillColor(10,28,46);doc.roundedRect(12,y-3,W-24,8,'F');
-    doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(232,244,253);
-    doc.text(cat.icon+' '+cat.id,18,y+1.5);
-    doc.setFontSize(8);doc.setTextColor(...colorByPct(catPct));
-    doc.text(catDone+'/'+items.length+' ('+catPct+'%)',W-16,y+1.5,{align:'right'});
-    miniBar(80,y-1.5,60,5,catPct);
-    y+=9;
-  });
-  y+=4;
+    return `<tr class="${i%2===0?'row-a':'row-b'}">
+      <td><strong>${cat.icon} ${cat.id}</strong></td>
+      <td class="center">${items.length}</td>
+      <td class="center" style="color:#34d399;font-weight:700">${catDone}</td>
+      <td class="center" style="color:${pctColor(catPct)};font-weight:800">${catPct}%</td>
+      <td><div class="bar-outer"><div class="bar-inner" style="width:${catPct}%;background:${pctColor(catPct)}"></div></div></td>
+      <td class="center"><span class="status-pill" style="background:${pctBg(catPct)};color:${pctColor(catPct)}">${pctLabel(catPct)}</span></td>
+    </tr>`;
+  }).join('');
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // PAGE 2 — DETAIL SEMUA HABIT
-  // ═══════════════════════════════════════════════════════════════════════════
-  newPage();drawHeader('DETAIL HABIT HARI INI');
-  y=52;
-  y=drawSectionTitle('DAFTAR LENGKAP HABIT & STATUS',y,'◆');
+  // Build today's habit rows
+  const habitRowsHTML=S.habits.map((h,i)=>`
+    <tr class="${i%2===0?'row-a':'row-b'}">
+      <td class="center" style="color:#94a3b8">${i+1}</td>
+      <td><strong>${h.title}</strong></td>
+      <td class="center"><span class="cat-chip">${CATS.find(c=>c.id===h.cat)?.icon||'•'} ${h.cat}</span></td>
+      <td class="center"><span class="badge ${h.done?'badge-done':'badge-pending'}">${h.done?'✅ Selesai':'⏳ Belum'}</span></td>
+    </tr>`).join('');
 
-  // Table header
-  doc.setFillColor(7,21,37);doc.roundedRect(12,y-1,W-24,8,2,2,'F');
-  doc.setFontSize(7.5);doc.setFont('helvetica','bold');doc.setTextColor(14,165,233);
-  doc.text('No',16,y+4);doc.text('Habit / Kebiasaan',24,y+4);
-  doc.text('Kategori',130,y+4);doc.text('Status',165,y+4);
-  y+=10;
+  // Build history rows (simple table)
+  const histRowsHTML=recs.length===0
+    ?'<tr><td colspan="6" class="center muted" style="padding:20px">Belum ada data historis untuk periode ini.</td></tr>'
+    :recs.map((r,i)=>{
+      const d=new Date((r.date||ds(today))+'T00:00:00');
+      const pct=r.pct||0;
+      return `<tr class="${i%2===0?'row-a':'row-b'}">
+        <td style="font-weight:600">${r.date||ds(today)}</td>
+        <td class="center">${DAYS()[d.getDay()]||'—'}</td>
+        <td class="center">${r.total||0}</td>
+        <td class="center" style="color:#34d399;font-weight:700">${r.done||0}</td>
+        <td class="center" style="font-weight:800;color:${pctColor(pct)}">${pct}%</td>
+        <td class="center"><span class="status-pill" style="background:${pctBg(pct)};color:${pctColor(pct)}">${pctLabel(pct)}</span></td>
+      </tr>`;
+    }).join('');
 
-  S.habits.forEach((h,i)=>{
-    if(y>H-16){newPage();drawHeader('DETAIL HABIT (lanjutan)');y=52;}
-    if(i%2===0){doc.setFillColor(5,18,32);doc.rect(12,y-3.5,W-24,8.5,'F');}
-    doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(200,220,240);
-    doc.text(String(i+1),16.5,y+1);
-    doc.text(h.title.substring(0,54),24,y+1);
-    doc.text(h.cat,130,y+1);
-    if(h.done){doc.setFillColor(52,211,153);doc.roundedRect(162,y-2.5,24,7,2,2,'F');
-      doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.text('Selesai',174,y+1,{align:'center'});}
-    else{doc.setFillColor(30,50,70);doc.roundedRect(162,y-2.5,24,7,2,2,'F');
-      doc.setTextColor(248,113,113);doc.setFont('helvetica','normal');doc.text('Pending',174,y+1,{align:'center'});}
-    y+=8;
-  });
-  y+=4;
+  // ── MONTHLY CALENDAR with collapsible day habit detail ──
+  // Build a map: date-string -> history record
+  const histMap={};
+  allRecs.forEach(r=>{if(r.date)histMap[r.date]=r;});
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // PAGE 3 — REKAP HISTORIS DETAIL
-  // ═══════════════════════════════════════════════════════════════════════════
-  newPage();drawHeader('REKAP HISTORIS — '+S.exportPeriod.toUpperCase());
-  y=52;
-  y=drawSectionTitle('DATA REKAP '+S.exportPeriod.toUpperCase()+' ('+recs.length+' hari)',y,'◆');
+  // Determine which month to show (current month)
+  const yr=today.getFullYear();
+  const mo=today.getMonth(); // 0-based
+  const daysInMonth=new Date(yr,mo+1,0).getDate();
+  const firstDow=new Date(yr,mo,1).getDay(); // 0=Sun
+  const monthName=MONF_ID[mo];
+  const dayNames=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
 
-  // Table header
-  doc.setFillColor(7,21,37);doc.roundedRect(12,y-1,W-24,8,2,2,'F');
-  doc.setFontSize(7.5);doc.setFont('helvetica','bold');doc.setTextColor(14,165,233);
-  doc.text('Tanggal',16,y+4);doc.text('Hari',52,y+4);doc.text('Total',78,y+4);
-  doc.text('Selesai',95,y+4);doc.text('Progress',112,y+4);doc.text('Bar',132,y+4);doc.text('Status',165,y+4);
-  y+=10;
-
-  recs.forEach((r,i)=>{
-    if(y>H-16){newPage();drawHeader('REKAP HISTORIS (lanjutan)');y=52;}
-    const d=new Date((r.date||ds(today))+'T00:00:00');
-    const pct=r.pct||0;
-    if(i%2===0){doc.setFillColor(5,18,32);doc.rect(12,y-3.5,W-24,8.5,'F');}
-    doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(200,220,240);
-    doc.text(r.date||ds(today),16,y+1);
-    doc.text(DAYS()[d.getDay()]||'—',52,y+1);
-    doc.text(String(r.total||0),82,y+1,{align:'center'});
-    doc.text(String(r.done||0),99,y+1,{align:'center'});
-    doc.setTextColor(...colorByPct(pct));doc.setFont('helvetica','bold');
-    doc.text(pct+'%',118,y+1,{align:'center'});
-    miniBar(128,y-2,34,6,pct);
-    doc.setFontSize(6.5);doc.setFont('helvetica','normal');
-    doc.text(getPctLabel(pct),165,y+1);
-    y+=8;
-  });
-
-  // Statistik rekap
-  if(recs.length>0){
-    y+=4;
-    if(y>H-40){newPage();drawHeader('STATISTIK REKAP');y=52;}
-    y=drawSectionTitle('STATISTIK RINGKAS',y,'◆');
-    const best=recs.reduce((a,r)=>(r.pct||0)>(a.pct||0)?r:a,recs[0]);
-    const worst=recs.reduce((a,r)=>(r.pct||0)<(a.pct||0)?r:a,recs[0]);
-    const totalDone=recs.reduce((a,r)=>a+(r.done||0),0);
-    const statLines=[
-      ['Rata-rata Progress', avgPct+'%'],
-      ['Hari Terbaik', getDateLabel(best.date)+' ('+best.pct+'%)'],
-      ['Hari Terendah', getDateLabel(worst.date)+' ('+worst.pct+'%)'],
-      ['Total Habit Diselesaikan', String(totalDone)+' kali'],
-      ['Jumlah Hari Tercatat', String(recs.length)+' hari'],
-    ];
-    statLines.forEach((sl,i)=>{
-      if(i%2===0){doc.setFillColor(5,18,32);doc.rect(12,y-3,W-24,7,'F');}
-      doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(125,211,252);
-      doc.text(sl[0],18,y+1);
-      doc.setFont('helvetica','normal');doc.setTextColor(232,244,253);
-      doc.text(sl[1],W-14,y+1,{align:'right'});
-      y+=7;
-    });
+  // Generate calendar grid cells
+  let calCells='';
+  // Blank cells before first day
+  for(let i=0;i<firstDow;i++) calCells+=`<div class="cal-cell empty"></div>`;
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=`${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const rec=histMap[dateStr];
+    const isToday=dateStr===ds(today);
+    const isFuture=new Date(dateStr+'T00:00:00')>today;
+    let cellClass='cal-cell';
+    let dotColor='#e2e8f0';
+    let pct=0;
+    if(rec){pct=rec.pct||0;dotColor=pctColor(pct);}
+    if(isToday){cellClass+=' cal-today';}
+    if(isFuture){cellClass+=' cal-future';}
+    calCells+=`<div class="${cellClass}" onclick="toggleDay('day-${dateStr}')" style="cursor:${isFuture?'default':'pointer'}">
+      <div class="cal-num" style="${isToday?'background:linear-gradient(135deg,#0ea5e9,#22d3ee);color:#fff;':''}'">${d}</div>
+      ${!isFuture&&rec?`<div class="cal-dot" style="background:${dotColor}"></div><div class="cal-pct">${pct}%</div>`:''}
+      ${!isFuture&&!rec&&!isToday?`<div class="cal-pct" style="color:#cbd5e1">—</div>`:''}
+    </div>`;
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // PAGE 4 — GOALS & DIARY
-  // ═══════════════════════════════════════════════════════════════════════════
-  newPage();drawHeader('GOALS & DIARY');
-  y=52;
+  // Generate per-day habit accordion panels
+  let dayPanels='';
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=`${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const rec=histMap[dateStr];
+    const isFuture=new Date(dateStr+'T00:00:00')>today;
+    if(isFuture||!rec)continue;
+    const pct=rec.pct||0;
+    const dow=new Date(dateStr+'T00:00:00').getDay();
+    const dow_name=dayNames[dow];
+    const habitsSnap=rec.snapshot||rec.habits||[];
+    const doneHabits=habitsSnap.filter(h=>h.done);
+    const pendingHabits=habitsSnap.filter(h=>!h.done);
 
-  // Goals
-  y=drawSectionTitle('GOALS / TUJUAN HIDUP ('+S.goals.length+')',y,'◆');
-  if(S.goals.length===0){
-    doc.setFontSize(8);doc.setTextColor(58,106,130);doc.text('Belum ada goals. Mulai tambahkan tujuan hidupmu!',14,y+2);y+=10;
+    // Journal entries for this date
+    const dayJournals=(S.journals||[]).filter(j=>j.date===dateStr);
+    const dayDiary=(S.diary||[]).filter(d2=>d2.date===dateStr);
+    const dayMood=rec.mood||(S.moodToday&&S.moodToday.date===dateStr?S.moodToday:null);
+    const dayMed=rec.medicineTaken||(S.medicineTaken&&S.medicineTaken.date===dateStr?S.medicineTaken.taken:false);
+
+    const habitsHTML=habitsSnap.length>0
+      ?`<div class="habit-grid">
+          ${habitsSnap.map(h=>`
+            <div class="habit-row ${h.done?'h-done':'h-pending'}">
+              <span class="h-chk">${h.done?'✅':'⏳'}</span>
+              <span class="h-name">${h.title}</span>
+              <span class="h-cat">${h.cat}</span>
+            </div>`).join('')}
+        </div>`
+      :`<p class="muted-sm">Tidak ada data habit untuk tanggal ini.</p>`;
+
+    const journalHTML=dayJournals.length>0
+      ?dayJournals.map(j=>`<div class="mini-entry"><span class="mini-mood-dot" style="background:${j.mood>=4?'#34d399':j.mood>=3?'#fbbf24':'#f87171'}"></span><span>${j.emoji} ${j.mood}/5 — ${j.content.split('\n')[0].slice(0,80)}${j.content.length>80?'...':''}</span></div>`).join('')
+      :'';
+    const diaryHTML2=dayDiary.length>0
+      ?dayDiary.map(d2=>`<div class="mini-entry"><span>${d2.mood} <strong>${d2.title}</strong> — ${(d2.content||'').slice(0,80)}${(d2.content||'').length>80?'...':''}</span></div>`).join('')
+      :'';
+
+    dayPanels+=`
+    <div class="day-panel" id="day-${dateStr}" style="display:none">
+      <div class="day-panel-header">
+        <div class="day-panel-date">
+          <span class="dpd-num">${d}</span>
+          <div>
+            <div style="font-weight:700;font-size:12px">${dow_name}, ${d} ${monthName} ${yr}</div>
+            <div style="font-size:10px;color:#64748b">${doneHabits.length}/${habitsSnap.length} habit selesai &nbsp;·&nbsp; Progress: <strong style="color:${pctColor(pct)}">${pct}%</strong></div>
+          </div>
+        </div>
+        <div class="day-panel-bar-wrap">
+          <div class="day-panel-bar" style="width:${pct}%;background:${pctColor(pct)}"></div>
+        </div>
+        <button class="day-close-btn" onclick="toggleDay('day-${dateStr}')">✕ Tutup</button>
+      </div>
+      <div class="day-panel-grid">
+        <div class="day-panel-col">
+          <div class="dp-label">📋 Detail Habit</div>
+          ${habitsHTML}
+        </div>
+        <div class="day-panel-col">
+          <div class="dp-label">📊 Status Harian</div>
+          <div class="status-mini-grid">
+            <div class="smg-item"><div class="smg-icon" style="background:${pct>=80?'#d1fae5':'#fee2e2'}">${pct>=80?'🌟':'📈'}</div><div><div class="smg-lbl">Progress</div><div class="smg-val" style="color:${pctColor(pct)}">${pct}%</div></div></div>
+            <div class="smg-item"><div class="smg-icon" style="background:#dbeafe">💊</div><div><div class="smg-lbl">Obat</div><div class="smg-val">${dayMed?'✅':'❌'}</div></div></div>
+          </div>
+          ${dayJournals.length>0||dayDiary.length>0?`
+          <div class="dp-label" style="margin-top:10px">📝 Catatan</div>
+          ${journalHTML}${diaryHTML2}`:''}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // Goals HTML
+  const goalsHTML=S.goals.length===0
+    ?'<p class="muted">Belum ada goals. Mulai tambahkan tujuan hidupmu!</p>'
+    :S.goals.map((g,i)=>`
+      <div class="entry-card">
+        <div class="entry-meta"><span class="tag-pill">${g.period}</span><span class="muted-sm">${g.date}</span></div>
+        <div class="entry-text">${g.text}</div>
+      </div>`).join('');
+
+  // Diary HTML
+  const diaryHTMLfull=S.diary.length===0
+    ?'<p class="muted">Belum ada diary. Mulai ceritakan harimu!</p>'
+    :S.diary.slice().reverse().slice(0,12).map(d=>`
+      <div class="entry-card">
+        <div class="entry-meta"><span class="tag-mood">${d.mood}</span><strong style="color:#0c1e30">${d.title}</strong><span class="muted-sm">${d.date} · ${d.time}</span></div>
+        <div class="entry-text">${(d.content||'').replace(/\n/g,'<br>')}</div>
+      </div>`).join('');
+
+  // Journal HTML
+  const jurnalHTMLfull=journals.length===0
+    ?'<p class="muted">Belum ada jurnal perasaan.</p>'
+    :journals.slice().reverse().slice(0,12).map(j=>{
+      const mc=j.mood>=4?'#34d399':j.mood>=3?'#fbbf24':'#f87171';
+      return `<div class="entry-card">
+        <div class="entry-meta"><span class="badge-mood" style="background:${mc};">${j.emoji} ${j.mood}/5</span><span class="muted-sm">${j.date} · ${j.time}</span></div>
+        <div class="entry-text">${(j.content||'').replace(/\n/g,'<br>')}</div>
+      </div>`;
+    }).join('');
+
+  const html=`<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Eunoia — Laporan ${S.exportPeriod} ${ds(today)}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Inter',sans-serif;background:#f0f4f8;color:#1a1a2e;font-size:11px;line-height:1.55;}
+
+  /* ── HEADER ─────────────────────────────────── */
+  .pdf-header{background:linear-gradient(135deg,#030b14 0%,#071525 55%,#0c2040 100%);color:#e8f4fd;padding:28px 36px;display:flex;align-items:center;justify-content:space-between;border-bottom:4px solid #0ea5e9;position:relative;overflow:hidden;}
+  .pdf-header::before{content:'';position:absolute;width:300px;height:300px;background:radial-gradient(circle,rgba(14,165,233,0.12),transparent 70%);top:-100px;right:60px;border-radius:50%;pointer-events:none;}
+  .header-left{display:flex;align-items:center;gap:18px;position:relative;}
+  .logo-box{width:56px;height:56px;background:linear-gradient(135deg,#0ea5e9,#22d3ee);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:#fff;flex-shrink:0;box-shadow:0 8px 24px rgba(14,165,233,0.4);}
+  .header-brand{font-size:28px;font-weight:900;color:#7dd3fc;letter-spacing:-1px;}
+  .header-tagline{font-size:10px;color:#3a6a82;margin-top:3px;letter-spacing:0.5px;}
+  .header-right{text-align:right;position:relative;}
+  .period-badge{display:inline-block;background:linear-gradient(135deg,#0ea5e9,#22d3ee);color:#fff;font-size:10px;font-weight:800;padding:5px 16px;border-radius:20px;letter-spacing:1.5px;text-transform:uppercase;box-shadow:0 4px 12px rgba(14,165,233,0.35);}
+  .header-date{font-size:10px;color:#7eb8d4;margin-top:6px;}
+  .header-user{font-size:12px;font-weight:700;color:#e8f4fd;margin-top:3px;}
+
+  /* ── USER CARD ──────────────────────────────── */
+  .user-card{background:linear-gradient(135deg,#f0f7ff,#e8f4fd);border:1px solid #bfdbfe;border-left:5px solid #0ea5e9;border-radius:12px;padding:18px 24px;margin:20px 32px;display:flex;align-items:center;gap:20px;box-shadow:0 2px 12px rgba(14,165,233,0.08);}
+  .user-avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#0ea5e9,#22d3ee);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:#fff;flex-shrink:0;box-shadow:0 4px 16px rgba(14,165,233,0.3);}
+  .user-name-big{font-size:18px;font-weight:900;color:#0c1e30;}
+  .user-sub{font-size:10px;color:#3a6a82;margin-top:3px;}
+  .user-stats{margin-left:auto;display:flex;gap:20px;}
+  .user-stat{text-align:center;}
+  .user-stat .sv{font-size:20px;font-weight:900;line-height:1;}
+  .user-stat .sl{font-size:9px;color:#3a6a82;text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+
+  /* ── STAT CARDS ─────────────────────────────── */
+  .stat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 32px 24px;}
+  .stat-card{background:#fff;border:1px solid #e2eeff;border-radius:10px;padding:14px;text-align:center;border-top:4px solid var(--c);box-shadow:0 2px 8px rgba(0,0,0,0.04);}
+  .stat-card .sv{font-size:26px;font-weight:900;color:var(--c);line-height:1;}
+  .stat-card .sl{font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-top:4px;font-weight:600;}
+  .stat-card .ss{font-size:10px;color:#94a3b8;margin-top:3px;}
+
+  /* ── SECTION ─────────────────────────────────── */
+  .section{margin:0 32px 28px;}
+  .section-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .section-title{background:linear-gradient(90deg,#030b14,#0c2040);color:#7dd3fc;font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:7px 16px;border-radius:7px;border-left:3px solid #0ea5e9;}
+  .section-count{font-size:10px;color:#94a3b8;margin-left:4px;}
+
+  /* ── TABLE ───────────────────────────────────── */
+  table{width:100%;border-collapse:collapse;font-size:10px;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.05);}
+  thead tr{background:#0c1e30;}
+  th{color:#7dd3fc;font-weight:700;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:9px 12px;text-align:left;}
+  th.center,td.center{text-align:center;}
+  td{padding:8px 12px;vertical-align:middle;}
+  .row-a{background:#f8faff;}
+  .row-b{background:#ffffff;}
+  .row-a td,.row-b td{border-bottom:1px solid #f0f4ff;}
+
+  /* ── BADGES / PILLS ─────────────────────────── */
+  .badge{display:inline-block;font-size:9px;font-weight:700;padding:3px 10px;border-radius:20px;}
+  .badge-done{background:#d1fae5;color:#065f46;}
+  .badge-pending{background:#fee2e2;color:#991b1b;}
+  .badge-mood{display:inline-block;font-size:9px;font-weight:700;padding:3px 10px;border-radius:20px;color:#fff;}
+  .status-pill{display:inline-block;font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;}
+  .cat-chip{display:inline-block;background:#f1f5f9;color:#475569;font-size:9px;font-weight:600;padding:2px 8px;border-radius:20px;}
+
+  /* ── BARS ────────────────────────────────────── */
+  .bar-outer{background:#e2eeff;border-radius:4px;height:8px;width:90px;overflow:hidden;}
+  .bar-inner{height:100%;border-radius:4px;}
+
+  /* ── STATUS ITEMS ───────────────────────────── */
+  .status-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .status-item{background:#fff;border:1px solid #e2eeff;border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,0.04);}
+  .status-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+  .status-label{font-size:9px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
+  .status-val{font-size:12px;font-weight:700;color:#1a1a2e;margin-top:2px;}
+
+  /* ── ENTRY CARDS ─────────────────────────────── */
+  .entry-card{background:#fff;border:1px solid #e2eeff;border-left:4px solid #0ea5e9;border-radius:8px;padding:12px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.04);}
+  .entry-meta{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;}
+  .entry-text{font-size:10px;color:#334155;line-height:1.7;}
+  .tag-pill{background:#dbeafe;color:#1e40af;font-size:9px;font-weight:700;padding:2px 9px;border-radius:12px;}
+  .tag-mood{font-size:15px;}
+
+  /* ── CALENDAR ────────────────────────────────── */
+  .cal-intro{background:#fff;border:1px solid #e2eeff;border-radius:10px;padding:14px 18px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,0.04);}
+  .cal-intro-title{font-size:13px;font-weight:800;color:#0c1e30;margin-bottom:4px;}
+  .cal-intro-sub{font-size:10px;color:#64748b;}
+  .cal-month-label{font-size:14px;font-weight:800;color:#0c1e30;text-align:center;margin-bottom:14px;letter-spacing:-0.3px;}
+  .cal-legend{display:flex;gap:16px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
+  .cal-legend-item{display:flex;align-items:center;gap:5px;font-size:9px;color:#64748b;font-weight:600;}
+  .cal-legend-dot{width:10px;height:10px;border-radius:50%;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .cal-dow{text-align:center;font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;padding:4px 0 6px;}
+  .cal-cell{background:#fff;border:1px solid #f0f4ff;border-radius:8px;padding:6px 4px;text-align:center;cursor:pointer;transition:all .15s;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;}
+  .cal-cell:not(.cal-future):not(.empty):hover{border-color:#0ea5e9;background:#f0f9ff;box-shadow:0 2px 8px rgba(14,165,233,0.12);}
+  .cal-cell.empty{background:transparent;border-color:transparent;cursor:default;}
+  .cal-cell.cal-future{background:#fafbfd;cursor:default;opacity:0.5;}
+  .cal-cell.cal-today{border-color:#0ea5e9;background:#f0f9ff;}
+  .cal-num{width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border-radius:50%;color:#334155;}
+  .cal-dot{width:6px;height:6px;border-radius:50%;}
+  .cal-pct{font-size:8px;font-weight:700;color:#64748b;}
+
+  /* ── DAY PANELS ─────────────────────────────── */
+  .day-panels-wrap{margin-top:14px;}
+  .day-panel{background:#fff;border:1px solid #bfdbfe;border-radius:12px;margin-bottom:10px;overflow:hidden;box-shadow:0 2px 12px rgba(14,165,233,0.1);animation:slideIn .2s ease;}
+  @keyframes slideIn{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+  .day-panel-header{background:linear-gradient(135deg,#f0f9ff,#e8f4fd);padding:14px 18px;border-bottom:1px solid #dbeafe;}
+  .day-panel-date{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+  .dpd-num{width:38px;height:38px;background:linear-gradient(135deg,#0ea5e9,#22d3ee);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#fff;flex-shrink:0;}
+  .day-panel-bar-wrap{background:#dbeafe;border-radius:4px;height:6px;overflow:hidden;margin-bottom:8px;}
+  .day-panel-bar{height:100%;border-radius:4px;transition:width .3s;}
+  .day-close-btn{background:#f1f5f9;border:1px solid #e2e8f0;border-radius:7px;padding:5px 12px;font-size:10px;font-weight:700;color:#64748b;cursor:pointer;float:right;margin-top:-36px;}
+  .day-close-btn:hover{background:#fee2e2;color:#991b1b;border-color:#fecaca;}
+  .day-panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+  .day-panel-col{padding:14px 18px;border-right:1px solid #f0f4ff;}
+  .day-panel-col:last-child{border-right:none;}
+  .dp-label{font-size:9px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;}
+  .habit-grid{display:flex;flex-direction:column;gap:5px;}
+  .habit-row{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:7px;font-size:10px;}
+  .habit-row.h-done{background:#f0fdf4;border:1px solid #bbf7d0;}
+  .habit-row.h-pending{background:#fff5f5;border:1px solid #fecaca;}
+  .h-chk{font-size:12px;flex-shrink:0;}
+  .h-name{flex:1;font-weight:500;color:#1e293b;}
+  .h-cat{font-size:8px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
+  .status-mini-grid{display:flex;flex-direction:column;gap:6px;}
+  .smg-item{display:flex;align-items:center;gap:8px;background:#f8faff;border:1px solid #e2eeff;border-radius:7px;padding:7px 10px;}
+  .smg-icon{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+  .smg-lbl{font-size:9px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
+  .smg-val{font-size:12px;font-weight:700;color:#1e293b;}
+  .mini-entry{display:flex;align-items:flex-start;gap:7px;padding:5px 0;border-bottom:1px solid #f0f4ff;font-size:10px;color:#475569;line-height:1.5;}
+  .mini-entry:last-child{border-bottom:none;}
+  .mini-mood-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+
+  /* ── HELPERS ─────────────────────────────────── */
+  .muted{color:#94a3b8;font-style:italic;}
+  .muted-sm{color:#94a3b8;font-size:9px;}
+  .center{text-align:center;}
+  .page-break{page-break-before:always;padding-top:28px;}
+  .no-break{page-break-inside:avoid;}
+
+  /* ── TIPS BOX ────────────────────────────────── */
+  .tips-box{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fde68a;border-left:4px solid #fbbf24;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:10px;color:#78350f;}
+
+  /* ── FOOTER ──────────────────────────────────── */
+  .pdf-footer{background:#030b14;color:#3a6a82;font-size:9px;padding:12px 36px;display:flex;justify-content:space-between;align-items:center;margin-top:28px;}
+  .footer-brand{color:#7dd3fc;font-weight:700;}
+
+  /* ── PRINT ───────────────────────────────────── */
+  @media print{
+    body{-webkit-print-color-adjust:exact;print-color-adjust:exact;background:#fff;}
+    .no-break{page-break-inside:avoid;}
+    .day-panel{display:block!important;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ░░ HEADER ░░ -->
+<div class="pdf-header">
+  <div class="header-left">
+    <div class="logo-box">✦</div>
+    <div>
+      <div class="header-brand">EUNOIA</div>
+      <div class="header-tagline">Beautiful Mind — Personal Growth Dashboard</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="period-badge">📅 ${S.exportPeriod}</div>
+    <div class="header-date">${todayStr}</div>
+    <div class="header-user">👤 ${S.userName||'Eunoia User'}</div>
+  </div>
+</div>
+
+<!-- ░░ USER CARD ░░ -->
+<div class="user-card">
+  <div class="user-avatar">${(S.userName||'E').charAt(0).toUpperCase()}</div>
+  <div>
+    <div class="user-name-big">${S.userName||'Eunoia User'}</div>
+    <div class="user-sub">🔥 ${S.streak} hari streak berturut-turut &nbsp;·&nbsp; ${totalCnt} habit terdaftar &nbsp;·&nbsp; ${allRecs.length} hari tercatat</div>
+  </div>
+  <div class="user-stats">
+    <div class="user-stat"><div class="sv" style="color:#0ea5e9">${totalCnt}</div><div class="sl">Habits</div></div>
+    <div class="user-stat"><div class="sv" style="color:#34d399">${doneCnt}</div><div class="sl">Selesai</div></div>
+    <div class="user-stat"><div class="sv" style="color:${pctColor(pctToday)}">${pctToday}%</div><div class="sl">Progress</div></div>
+    <div class="user-stat"><div class="sv" style="color:#f0c040">${S.streak}</div><div class="sl">Streak</div></div>
+  </div>
+</div>
+
+<!-- ░░ STAT CARDS ░░ -->
+<div class="stat-cards">
+  <div class="stat-card" style="--c:#0ea5e9"><div class="sv">${totalCnt}</div><div class="sl">Total Habit</div><div class="ss">Terdaftar</div></div>
+  <div class="stat-card" style="--c:#34d399"><div class="sv">${doneCnt}</div><div class="sl">Selesai Hari Ini</div><div class="ss">dari ${totalCnt} habit</div></div>
+  <div class="stat-card" style="--c:${pctColor(pctToday)}"><div class="sv">${pctToday}%</div><div class="sl">Progress Hari Ini</div><div class="ss">${pctLabel(pctToday)}</div></div>
+  <div class="stat-card" style="--c:${pctColor(avgPct)}"><div class="sv">${avgPct}%</div><div class="sl">Rata-rata ${S.exportPeriod}</div><div class="ss">${recs.length} hari tercatat</div></div>
+</div>
+
+<!-- ░░ STATUS HARI INI ░░ -->
+<div class="section no-break">
+  <div class="section-header"><div class="section-title">◆ Status Hari Ini</div></div>
+  <div class="status-grid">
+    <div class="status-item">
+      <div class="status-dot" style="background:${S.moodToday&&S.moodToday.mood>0?'#34d399':'#f87171'}"></div>
+      <div><div class="status-label">Mood Hari Ini</div><div class="status-val">${S.moodToday&&S.moodToday.mood>0?(S.moodToday.emoji+' '+S.moodToday.mood+'/5'):'Belum diisi'}</div></div>
+    </div>
+    <div class="status-item">
+      <div class="status-dot" style="background:${S.medicineTaken&&S.medicineTaken.taken?'#34d399':'#f87171'}"></div>
+      <div><div class="status-label">Minum Obat · ${S.medicineName}</div><div class="status-val">${S.medicineTaken&&S.medicineTaken.taken?'✅ Sudah diminum':'❌ Belum diminum'}</div></div>
+    </div>
+    <div class="status-item" style="grid-column:span 2">
+      <div class="status-dot" style="background:${S.afirmasiToday&&S.afirmasiToday.text?'#34d399':'#f87171'}"></div>
+      <div><div class="status-label">Afirmasi Positif Hari Ini</div><div class="status-val">${S.afirmasiToday&&S.afirmasiToday.text?'"'+S.afirmasiToday.text+'"':'Belum diisi'}</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ░░ HABIT PER KATEGORI ░░ -->
+<div class="section no-break">
+  <div class="section-header"><div class="section-title">◆ Rekap Habit Per Kategori</div></div>
+  <table>
+    <thead><tr><th>Kategori</th><th class="center">Total</th><th class="center">Selesai</th><th class="center">Progress</th><th>Bar</th><th class="center">Status</th></tr></thead>
+    <tbody>${catRowsHTML}</tbody>
+  </table>
+</div>
+
+<!-- ░░ DETAIL HABIT HARI INI ░░ -->
+<div class="section page-break no-break">
+  <div class="section-header"><div class="section-title">◆ Detail Habit Hari Ini</div><span class="section-count">${doneCnt}/${totalCnt} Selesai</span></div>
+  <table>
+    <thead><tr><th class="center">No</th><th>Habit / Kebiasaan</th><th class="center">Kategori</th><th class="center">Status</th></tr></thead>
+    <tbody>${habitRowsHTML}</tbody>
+  </table>
+</div>
+
+<!-- ░░ KALENDER BULANAN INTERAKTIF ░░ -->
+<div class="section page-break">
+  <div class="section-header"><div class="section-title">◆ Kalender Habit — ${monthName} ${yr}</div><span class="section-count">Klik tanggal untuk lihat detail habit</span></div>
+
+  <div class="tips-box">
+    💡 <strong>Cara Pakai:</strong> Klik tanggal yang ingin dilihat untuk membuka/menutup detail habit harian. Tanggal yang punya data akan menampilkan persentase progres.
+  </div>
+
+  <div class="cal-intro">
+    <div class="cal-month-label">📅 ${monthName} ${yr}</div>
+    <div class="cal-legend">
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#34d399"></div> ≥80% (Luar Biasa)</div>
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#0ea5e9"></div> ≥60% (Baik)</div>
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#fbbf24"></div> ≥40% (Cukup)</div>
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#f87171"></div> &lt;40% (Perlu Usaha)</div>
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#e2e8f0"></div> Belum ada data</div>
+    </div>
+    <div class="cal-grid">
+      ${dayNames.map(d=>`<div class="cal-dow">${d}</div>`).join('')}
+      ${calCells}
+    </div>
+  </div>
+
+  <!-- Day panels rendered here -->
+  <div class="day-panels-wrap" id="dayPanelsWrap">
+    ${dayPanels}
+  </div>
+</div>
+
+<!-- ░░ REKAP HISTORIS ░░ -->
+<div class="section page-break no-break">
+  <div class="section-header"><div class="section-title">◆ Rekap Historis — ${S.exportPeriod}</div><span class="section-count">${recs.length} hari tercatat</span></div>
+  <table>
+    <thead><tr><th>Tanggal</th><th class="center">Hari</th><th class="center">Total</th><th class="center">Selesai</th><th class="center">Progress</th><th class="center">Status</th></tr></thead>
+    <tbody>${histRowsHTML}</tbody>
+  </table>
+  ${recs.length>0&&bestRec?`<div style="margin-top:12px;padding:10px 14px;background:#f0f9ff;border:1px solid #bfdbfe;border-radius:8px;font-size:10px;color:#334155;display:flex;gap:20px;flex-wrap:wrap;">
+    <span>📊 Rata-rata: <strong style="color:#0ea5e9">${avgPct}%</strong></span>
+    <span>🏆 Hari Terbaik: <strong style="color:#34d399">${getDateLabel(bestRec.date)} (${bestRec.pct}%)</strong></span>
+    <span>📅 ${recs.length} hari tercatat dalam periode ini</span>
+  </div>`:''}
+</div>
+
+<!-- ░░ GOALS ░░ -->
+<div class="section page-break">
+  <div class="section-header"><div class="section-title">◆ Goals / Tujuan Hidup</div><span class="section-count">${S.goals.length} goals</span></div>
+  ${goalsHTML}
+</div>
+
+<!-- ░░ DIARY ░░ -->
+<div class="section">
+  <div class="section-header"><div class="section-title">◆ Diary / Catatan Harian</div><span class="section-count">${S.diary.length} entri</span></div>
+  ${diaryHTMLfull}
+  ${S.diary.length>12?`<p class="muted" style="font-size:10px;margin-top:8px">... dan ${S.diary.length-12} entri lainnya. Lihat Excel untuk data lengkap.</p>`:''}
+</div>
+
+<!-- ░░ JURNAL PERASAAN ░░ -->
+${journals.length>0?`
+<div class="section page-break">
+  <div class="section-header"><div class="section-title">◆ Jurnal Perasaan</div><span class="section-count">${journals.length} entri</span></div>
+  ${jurnalHTMLfull}
+  ${journals.length>12?`<p class="muted" style="font-size:10px;margin-top:8px">... dan ${journals.length-12} entri lainnya. Lihat Excel untuk data lengkap.</p>`:''}
+</div>`:''}
+
+<!-- ░░ FOOTER ░░ -->
+<div class="pdf-footer">
+  <span><span class="footer-brand">✦ EUNOIA</span> — Beautiful Mind &nbsp;·&nbsp; Laporan ${S.exportPeriod} &nbsp;·&nbsp; ${todayStr}</span>
+  <span>Dibuat: ${today.toLocaleTimeString('id-ID')} &nbsp;·&nbsp; Pengguna: ${S.userName||'—'}</span>
+</div>
+
+<script>
+function toggleDay(id){
+  var el=document.getElementById(id);
+  if(!el)return;
+  var isOpen=el.style.display!=='none'&&el.style.display!=='';
+  if(isOpen){
+    el.style.display='none';
   } else {
-    S.goals.forEach((g,i)=>{
-      if(y>H-20){newPage();drawHeader('GOALS (lanjutan)');y=52;}
-      doc.setFillColor(7,21,37);doc.roundedRect(12,y-3,W-24,14,2,2,'F');
-      doc.setFillColor(14,165,233);doc.roundedRect(12,y-3,3,14,1,1,'F');
-      doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(34,211,238);
-      doc.text('['+g.period+']',19,y+1);
-      doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(232,244,253);
-      const gLines=doc.splitTextToSize(g.text,W-52);
-      doc.text(gLines[0]||'',52,y+1);
-      if(gLines[1])doc.text(gLines[1],52,y+6);
-      doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(58,106,130);
-      doc.text('Dibuat: '+g.date,W-14,y+1,{align:'right'});
-      y+=15+((gLines[1])?0:0);
-    });
+    el.style.display='block';
+    el.scrollIntoView({behavior:'smooth',block:'nearest'});
   }
-  y+=4;
+}
+// Auto-open today's panel if it exists
+(function(){
+  var todayStr='${ds(today)}';
+  var el=document.getElementById('day-'+todayStr);
+  if(el){el.style.display='block';}
+})();
+<\/script>
 
-  // Diary
-  if(y>H-50){newPage();drawHeader('DIARY');y=52;}
-  y=drawSectionTitle('DIARY / CATATAN HARIAN ('+S.diary.length+' entri)',y,'◆');
-  if(S.diary.length===0){
-    doc.setFontSize(8);doc.setTextColor(58,106,130);doc.text('Belum ada diary. Mulai ceritakan harimu!',14,y+2);y+=10;
-  } else {
-    S.diary.slice().reverse().slice(0,12).forEach((d)=>{
-      if(y>H-30){newPage();drawHeader('DIARY (lanjutan)');y=52;}
-      doc.setFillColor(7,21,37);doc.roundedRect(12,y-3,W-24,20,2,2,'F');
-      doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(34,211,238);
-      doc.text(d.mood+' '+d.title.substring(0,38),18,y+2);
-      doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(58,106,130);
-      doc.text(d.date+' · '+d.time,W-14,y+2,{align:'right'});
-      doc.setFontSize(7.5);doc.setTextColor(125,184,212);
-      const lines=doc.splitTextToSize(d.content.replace(/\n/g,' '),W-30);
-      doc.text(lines[0]||'',18,y+8);
-      if(lines[1])doc.text((lines[1]||'').substring(0,80)+(lines.length>2?'...':''),18,y+13);
-      y+=22;
-    });
-    if(S.diary.length>12){
-      doc.setFontSize(7);doc.setTextColor(58,106,130);
-      doc.text('... dan '+(S.diary.length-12)+' entri lainnya. Lihat Excel untuk data lengkap.',14,y+2);
-      y+=8;
-    }
-  }
+</body>
+</html>`;
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // PAGE 5 — JURNAL PERASAAN
-  // ═══════════════════════════════════════════════════════════════════════════
-  const journals=S.journals||[];
-  if(journals.length>0){
-    newPage();drawHeader('JURNAL PERASAAN');
-    y=52;
-    y=drawSectionTitle('JURNAL PERASAAN ('+journals.length+' entri)',y,'◆');
-    journals.slice().reverse().slice(0,15).forEach((j,i)=>{
-      if(y>H-22){newPage();drawHeader('JURNAL PERASAAN (lanjutan)');y=52;}
-      if(i%2===0){doc.setFillColor(5,18,32);doc.rect(12,y-3.5,W-24,13,'F');}
-      const moodC=j.mood>=4?[52,211,153]:j.mood>=3?[251,191,36]:[248,113,113];
-      doc.setFillColor(...moodC);doc.roundedRect(14,y-2,16,8,2,2,'F');
-      doc.setFontSize(10);doc.setTextColor(255,255,255);doc.text(j.emoji,22,y+3.5,{align:'center'});
-      doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(...moodC);
-      doc.text(j.mood+'/5',22,y+8,{align:'center'});
-      doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(180,210,230);
-      const jLines=doc.splitTextToSize(j.content.replace(/\n/g,' · '),W-50);
-      doc.text(jLines[0]||'',36,y+2);
-      if(jLines[1])doc.text(jLines[1].substring(0,70),36,y+7);
-      doc.setFontSize(6.5);doc.setTextColor(58,106,130);
-      doc.text(j.date+' '+j.time,W-14,y+2,{align:'right'});
-      y+=13;
-    });
-  }
-
-  // ─── FOOTER ON ALL PAGES ──────────────────────────────────────────────────
-  const totalPages=doc.internal.getNumberOfPages();
-  for(let p=1;p<=totalPages;p++){doc.setPage(p);drawFooter(p,totalPages);}
-
-  doc.save(`Eunoia_Laporan_${S.exportPeriod}_${ds(today)}.pdf`);
+  // Open in new tab
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const win=window.open(url,'_blank');
+  if(!win){toast('⚠️ Popup diblokir! Izinkan popup di browser kamu lalu coba lagi.');URL.revokeObjectURL(url);return;}
+  win.onload=()=>{
+    setTimeout(()=>{
+      win.focus();
+      win.print();
+      setTimeout(()=>URL.revokeObjectURL(url),8000);
+    },800);
+  };
   toast(t('pdf-ok'));
 }
 
+// ── PROFILE ──────────────────────────────────────────────────────────────────
 // ── PROFILE ──────────────────────────────────────────────────────────────────
 function updateProfileStats(){
   document.getElementById('profileName').textContent=S.userName;

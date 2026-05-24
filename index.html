@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 :root{
   --bg:#030b14;
@@ -1530,7 +1532,7 @@ function exportExcel(){
   toast(t('excel-ok'));
 }
 
-// ── EXPORT PDF (DETAIL & RAPI) ─────────────────────────────────────────────
+// ── EXPORT PDF (DETAIL & RAPI — BERBEDA PER PERIODE) ─────────────────────────
 function exportPDF(){
   const today=new Date();
   const allRecs=S.history||[];
@@ -1542,200 +1544,17 @@ function exportPDF(){
   const bestRec=recs.length>0?recs.reduce((a,r)=>(r.pct||0)>(a.pct||0)?r:a,recs[0]):null;
   const todayStr=today.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const journals=S.journals||[];
+  const period=S.exportPeriod; // 'Harian' | 'Mingguan' | 'Bulanan' | 'Tahunan'
 
   function pctColor(p){return p>=80?'#34d399':p>=60?'#0ea5e9':p>=40?'#fbbf24':'#f87171';}
   function pctLabel(p){return p>=80?'Luar Biasa ✦':p>=60?'Baik':p>=40?'Cukup':'Perlu Ditingkatkan';}
   function pctBg(p){return p>=80?'#d1fae5':p>=60?'#dbeafe':p>=40?'#fef3c7':'#fee2e2';}
 
-  // Build category summary rows
-  const catRowsHTML=CATS.map((cat,i)=>{
-    const items=S.habits.filter(h=>h.cat===cat.id);
-    if(!items.length)return '';
-    const catDone=items.filter(h=>h.done).length;
-    const catPct=Math.round((catDone/items.length)*100);
-    return `<tr class="${i%2===0?'row-a':'row-b'}">
-      <td><strong>${cat.icon} ${cat.id}</strong></td>
-      <td class="center">${items.length}</td>
-      <td class="center" style="color:#34d399;font-weight:700">${catDone}</td>
-      <td class="center" style="color:${pctColor(catPct)};font-weight:800">${catPct}%</td>
-      <td><div class="bar-outer"><div class="bar-inner" style="width:${catPct}%;background:${pctColor(catPct)}"></div></div></td>
-      <td class="center"><span class="status-pill" style="background:${pctBg(catPct)};color:${pctColor(catPct)}">${pctLabel(catPct)}</span></td>
-    </tr>`;
-  }).join('');
-
-  // Build today's habit rows
-  const habitRowsHTML=S.habits.map((h,i)=>`
-    <tr class="${i%2===0?'row-a':'row-b'}">
-      <td class="center" style="color:#94a3b8">${i+1}</td>
-      <td><strong>${h.title}</strong></td>
-      <td class="center"><span class="cat-chip">${CATS.find(c=>c.id===h.cat)?.icon||'•'} ${h.cat}</span></td>
-      <td class="center"><span class="badge ${h.done?'badge-done':'badge-pending'}">${h.done?'✅ Selesai':'⏳ Belum'}</span></td>
-    </tr>`).join('');
-
-  // Build history rows (simple table)
-  const histRowsHTML=recs.length===0
-    ?'<tr><td colspan="6" class="center muted" style="padding:20px">Belum ada data historis untuk periode ini.</td></tr>'
-    :recs.map((r,i)=>{
-      const d=new Date((r.date||ds(today))+'T00:00:00');
-      const pct=r.pct||0;
-      return `<tr class="${i%2===0?'row-a':'row-b'}">
-        <td style="font-weight:600">${r.date||ds(today)}</td>
-        <td class="center">${DAYS()[d.getDay()]||'—'}</td>
-        <td class="center">${r.total||0}</td>
-        <td class="center" style="color:#34d399;font-weight:700">${r.done||0}</td>
-        <td class="center" style="font-weight:800;color:${pctColor(pct)}">${pct}%</td>
-        <td class="center"><span class="status-pill" style="background:${pctBg(pct)};color:${pctColor(pct)}">${pctLabel(pct)}</span></td>
-      </tr>`;
-    }).join('');
-
-  // ── MONTHLY CALENDAR with collapsible day habit detail ──
-  // Build a map: date-string -> history record
-  const histMap={};
-  allRecs.forEach(r=>{if(r.date)histMap[r.date]=r;});
-
-  // Determine which month to show (current month)
-  const yr=today.getFullYear();
-  const mo=today.getMonth(); // 0-based
-  const daysInMonth=new Date(yr,mo+1,0).getDate();
-  const firstDow=new Date(yr,mo,1).getDay(); // 0=Sun
-  const monthName=MONF_ID[mo];
-  const dayNames=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
-
-  // Generate calendar grid cells
-  let calCells='';
-  // Blank cells before first day
-  for(let i=0;i<firstDow;i++) calCells+=`<div class="cal-cell empty"></div>`;
-  for(let d=1;d<=daysInMonth;d++){
-    const dateStr=`${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const rec=histMap[dateStr];
-    const isToday=dateStr===ds(today);
-    const isFuture=new Date(dateStr+'T00:00:00')>today;
-    let cellClass='cal-cell';
-    let dotColor='#e2e8f0';
-    let pct=0;
-    if(rec){pct=rec.pct||0;dotColor=pctColor(pct);}
-    if(isToday){cellClass+=' cal-today';}
-    if(isFuture){cellClass+=' cal-future';}
-    calCells+=`<div class="${cellClass}" onclick="toggleDay('day-${dateStr}')" style="cursor:${isFuture?'default':'pointer'}">
-      <div class="cal-num" style="${isToday?'background:linear-gradient(135deg,#0ea5e9,#22d3ee);color:#fff;':''}'">${d}</div>
-      ${!isFuture&&rec?`<div class="cal-dot" style="background:${dotColor}"></div><div class="cal-pct">${pct}%</div>`:''}
-      ${!isFuture&&!rec&&!isToday?`<div class="cal-pct" style="color:#cbd5e1">—</div>`:''}
-    </div>`;
-  }
-
-  // Generate per-day habit accordion panels
-  let dayPanels='';
-  for(let d=1;d<=daysInMonth;d++){
-    const dateStr=`${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const rec=histMap[dateStr];
-    const isFuture=new Date(dateStr+'T00:00:00')>today;
-    if(isFuture||!rec)continue;
-    const pct=rec.pct||0;
-    const dow=new Date(dateStr+'T00:00:00').getDay();
-    const dow_name=dayNames[dow];
-    const habitsSnap=rec.snapshot||rec.habits||[];
-    const doneHabits=habitsSnap.filter(h=>h.done);
-    const pendingHabits=habitsSnap.filter(h=>!h.done);
-
-    // Journal entries for this date
-    const dayJournals=(S.journals||[]).filter(j=>j.date===dateStr);
-    const dayDiary=(S.diary||[]).filter(d2=>d2.date===dateStr);
-    const dayMood=rec.mood||(S.moodToday&&S.moodToday.date===dateStr?S.moodToday:null);
-    const dayMed=rec.medicineTaken||(S.medicineTaken&&S.medicineTaken.date===dateStr?S.medicineTaken.taken:false);
-
-    const habitsHTML=habitsSnap.length>0
-      ?`<div class="habit-grid">
-          ${habitsSnap.map(h=>`
-            <div class="habit-row ${h.done?'h-done':'h-pending'}">
-              <span class="h-chk">${h.done?'✅':'⏳'}</span>
-              <span class="h-name">${h.title}</span>
-              <span class="h-cat">${h.cat}</span>
-            </div>`).join('')}
-        </div>`
-      :`<p class="muted-sm">Tidak ada data habit untuk tanggal ini.</p>`;
-
-    const journalHTML=dayJournals.length>0
-      ?dayJournals.map(j=>`<div class="mini-entry"><span class="mini-mood-dot" style="background:${j.mood>=4?'#34d399':j.mood>=3?'#fbbf24':'#f87171'}"></span><span>${j.emoji} ${j.mood}/5 — ${j.content.split('\n')[0].slice(0,80)}${j.content.length>80?'...':''}</span></div>`).join('')
-      :'';
-    const diaryHTML2=dayDiary.length>0
-      ?dayDiary.map(d2=>`<div class="mini-entry"><span>${d2.mood} <strong>${d2.title}</strong> — ${(d2.content||'').slice(0,80)}${(d2.content||'').length>80?'...':''}</span></div>`).join('')
-      :'';
-
-    dayPanels+=`
-    <div class="day-panel" id="day-${dateStr}" style="display:none">
-      <div class="day-panel-header">
-        <div class="day-panel-date">
-          <span class="dpd-num">${d}</span>
-          <div>
-            <div style="font-weight:700;font-size:12px">${dow_name}, ${d} ${monthName} ${yr}</div>
-            <div style="font-size:10px;color:#64748b">${doneHabits.length}/${habitsSnap.length} habit selesai &nbsp;·&nbsp; Progress: <strong style="color:${pctColor(pct)}">${pct}%</strong></div>
-          </div>
-        </div>
-        <div class="day-panel-bar-wrap">
-          <div class="day-panel-bar" style="width:${pct}%;background:${pctColor(pct)}"></div>
-        </div>
-        <button class="day-close-btn" onclick="toggleDay('day-${dateStr}')">✕ Tutup</button>
-      </div>
-      <div class="day-panel-grid">
-        <div class="day-panel-col">
-          <div class="dp-label">📋 Detail Habit</div>
-          ${habitsHTML}
-        </div>
-        <div class="day-panel-col">
-          <div class="dp-label">📊 Status Harian</div>
-          <div class="status-mini-grid">
-            <div class="smg-item"><div class="smg-icon" style="background:${pct>=80?'#d1fae5':'#fee2e2'}">${pct>=80?'🌟':'📈'}</div><div><div class="smg-lbl">Progress</div><div class="smg-val" style="color:${pctColor(pct)}">${pct}%</div></div></div>
-            <div class="smg-item"><div class="smg-icon" style="background:#dbeafe">💊</div><div><div class="smg-lbl">Obat</div><div class="smg-val">${dayMed?'✅':'❌'}</div></div></div>
-          </div>
-          ${dayJournals.length>0||dayDiary.length>0?`
-          <div class="dp-label" style="margin-top:10px">📝 Catatan</div>
-          ${journalHTML}${diaryHTML2}`:''}
-        </div>
-      </div>
-    </div>`;
-  }
-
-  // Goals HTML
-  const goalsHTML=S.goals.length===0
-    ?'<p class="muted">Belum ada goals. Mulai tambahkan tujuan hidupmu!</p>'
-    :S.goals.map((g,i)=>`
-      <div class="entry-card">
-        <div class="entry-meta"><span class="tag-pill">${g.period}</span><span class="muted-sm">${g.date}</span></div>
-        <div class="entry-text">${g.text}</div>
-      </div>`).join('');
-
-  // Diary HTML
-  const diaryHTMLfull=S.diary.length===0
-    ?'<p class="muted">Belum ada diary. Mulai ceritakan harimu!</p>'
-    :S.diary.slice().reverse().slice(0,12).map(d=>`
-      <div class="entry-card">
-        <div class="entry-meta"><span class="tag-mood">${d.mood}</span><strong style="color:#0c1e30">${d.title}</strong><span class="muted-sm">${d.date} · ${d.time}</span></div>
-        <div class="entry-text">${(d.content||'').replace(/\n/g,'<br>')}</div>
-      </div>`).join('');
-
-  // Journal HTML
-  const jurnalHTMLfull=journals.length===0
-    ?'<p class="muted">Belum ada jurnal perasaan.</p>'
-    :journals.slice().reverse().slice(0,12).map(j=>{
-      const mc=j.mood>=4?'#34d399':j.mood>=3?'#fbbf24':'#f87171';
-      return `<div class="entry-card">
-        <div class="entry-meta"><span class="badge-mood" style="background:${mc};">${j.emoji} ${j.mood}/5</span><span class="muted-sm">${j.date} · ${j.time}</span></div>
-        <div class="entry-text">${(j.content||'').replace(/\n/g,'<br>')}</div>
-      </div>`;
-    }).join('');
-
-  const html=`<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Eunoia — Laporan ${S.exportPeriod} ${ds(today)}</title>
-<style>
+  // ── Shared CSS ──────────────────────────────────────────────────────────
+  const sharedCSS=`
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
   *{margin:0;padding:0;box-sizing:border-box;}
   body{font-family:'Inter',sans-serif;background:#f0f4f8;color:#1a1a2e;font-size:11px;line-height:1.55;}
-
-  /* ── HEADER ─────────────────────────────────── */
   .pdf-header{background:linear-gradient(135deg,#030b14 0%,#071525 55%,#0c2040 100%);color:#e8f4fd;padding:28px 36px;display:flex;align-items:center;justify-content:space-between;border-bottom:4px solid #0ea5e9;position:relative;overflow:hidden;}
   .pdf-header::before{content:'';position:absolute;width:300px;height:300px;background:radial-gradient(circle,rgba(14,165,233,0.12),transparent 70%);top:-100px;right:60px;border-radius:50%;pointer-events:none;}
   .header-left{display:flex;align-items:center;gap:18px;position:relative;}
@@ -1746,8 +1565,6 @@ function exportPDF(){
   .period-badge{display:inline-block;background:linear-gradient(135deg,#0ea5e9,#22d3ee);color:#fff;font-size:10px;font-weight:800;padding:5px 16px;border-radius:20px;letter-spacing:1.5px;text-transform:uppercase;box-shadow:0 4px 12px rgba(14,165,233,0.35);}
   .header-date{font-size:10px;color:#7eb8d4;margin-top:6px;}
   .header-user{font-size:12px;font-weight:700;color:#e8f4fd;margin-top:3px;}
-
-  /* ── USER CARD ──────────────────────────────── */
   .user-card{background:linear-gradient(135deg,#f0f7ff,#e8f4fd);border:1px solid #bfdbfe;border-left:5px solid #0ea5e9;border-radius:12px;padding:18px 24px;margin:20px 32px;display:flex;align-items:center;gap:20px;box-shadow:0 2px 12px rgba(14,165,233,0.08);}
   .user-avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#0ea5e9,#22d3ee);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:#fff;flex-shrink:0;box-shadow:0 4px 16px rgba(14,165,233,0.3);}
   .user-name-big{font-size:18px;font-weight:900;color:#0c1e30;}
@@ -1756,21 +1573,15 @@ function exportPDF(){
   .user-stat{text-align:center;}
   .user-stat .sv{font-size:20px;font-weight:900;line-height:1;}
   .user-stat .sl{font-size:9px;color:#3a6a82;text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
-
-  /* ── STAT CARDS ─────────────────────────────── */
   .stat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 32px 24px;}
   .stat-card{background:#fff;border:1px solid #e2eeff;border-radius:10px;padding:14px;text-align:center;border-top:4px solid var(--c);box-shadow:0 2px 8px rgba(0,0,0,0.04);}
   .stat-card .sv{font-size:26px;font-weight:900;color:var(--c);line-height:1;}
   .stat-card .sl{font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-top:4px;font-weight:600;}
   .stat-card .ss{font-size:10px;color:#94a3b8;margin-top:3px;}
-
-  /* ── SECTION ─────────────────────────────────── */
   .section{margin:0 32px 28px;}
   .section-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
   .section-title{background:linear-gradient(90deg,#030b14,#0c2040);color:#7dd3fc;font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:7px 16px;border-radius:7px;border-left:3px solid #0ea5e9;}
   .section-count{font-size:10px;color:#94a3b8;margin-left:4px;}
-
-  /* ── TABLE ───────────────────────────────────── */
   table{width:100%;border-collapse:collapse;font-size:10px;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.05);}
   thead tr{background:#0c1e30;}
   th{color:#7dd3fc;font-weight:700;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:9px 12px;text-align:left;}
@@ -1779,289 +1590,480 @@ function exportPDF(){
   .row-a{background:#f8faff;}
   .row-b{background:#ffffff;}
   .row-a td,.row-b td{border-bottom:1px solid #f0f4ff;}
-
-  /* ── BADGES / PILLS ─────────────────────────── */
   .badge{display:inline-block;font-size:9px;font-weight:700;padding:3px 10px;border-radius:20px;}
   .badge-done{background:#d1fae5;color:#065f46;}
   .badge-pending{background:#fee2e2;color:#991b1b;}
   .badge-mood{display:inline-block;font-size:9px;font-weight:700;padding:3px 10px;border-radius:20px;color:#fff;}
   .status-pill{display:inline-block;font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;}
   .cat-chip{display:inline-block;background:#f1f5f9;color:#475569;font-size:9px;font-weight:600;padding:2px 8px;border-radius:20px;}
-
-  /* ── BARS ────────────────────────────────────── */
   .bar-outer{background:#e2eeff;border-radius:4px;height:8px;width:90px;overflow:hidden;}
   .bar-inner{height:100%;border-radius:4px;}
-
-  /* ── STATUS ITEMS ───────────────────────────── */
   .status-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .status-item{background:#fff;border:1px solid #e2eeff;border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,0.04);}
   .status-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
   .status-label{font-size:9px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
   .status-val{font-size:12px;font-weight:700;color:#1a1a2e;margin-top:2px;}
-
-  /* ── ENTRY CARDS ─────────────────────────────── */
   .entry-card{background:#fff;border:1px solid #e2eeff;border-left:4px solid #0ea5e9;border-radius:8px;padding:12px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.04);}
   .entry-meta{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;}
   .entry-text{font-size:10px;color:#334155;line-height:1.7;}
   .tag-pill{background:#dbeafe;color:#1e40af;font-size:9px;font-weight:700;padding:2px 9px;border-radius:12px;}
   .tag-mood{font-size:15px;}
-
-  /* ── CALENDAR ────────────────────────────────── */
-  .cal-intro{background:#fff;border:1px solid #e2eeff;border-radius:10px;padding:14px 18px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,0.04);}
-  .cal-intro-title{font-size:13px;font-weight:800;color:#0c1e30;margin-bottom:4px;}
-  .cal-intro-sub{font-size:10px;color:#64748b;}
-  .cal-month-label{font-size:14px;font-weight:800;color:#0c1e30;text-align:center;margin-bottom:14px;letter-spacing:-0.3px;}
-  .cal-legend{display:flex;gap:16px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
-  .cal-legend-item{display:flex;align-items:center;gap:5px;font-size:9px;color:#64748b;font-weight:600;}
-  .cal-legend-dot{width:10px;height:10px;border-radius:50%;}
-  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
-  .cal-dow{text-align:center;font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;padding:4px 0 6px;}
-  .cal-cell{background:#fff;border:1px solid #f0f4ff;border-radius:8px;padding:6px 4px;text-align:center;cursor:pointer;transition:all .15s;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;}
-  .cal-cell:not(.cal-future):not(.empty):hover{border-color:#0ea5e9;background:#f0f9ff;box-shadow:0 2px 8px rgba(14,165,233,0.12);}
-  .cal-cell.empty{background:transparent;border-color:transparent;cursor:default;}
-  .cal-cell.cal-future{background:#fafbfd;cursor:default;opacity:0.5;}
-  .cal-cell.cal-today{border-color:#0ea5e9;background:#f0f9ff;}
-  .cal-num{width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border-radius:50%;color:#334155;}
-  .cal-dot{width:6px;height:6px;border-radius:50%;}
-  .cal-pct{font-size:8px;font-weight:700;color:#64748b;}
-
-  /* ── DAY PANELS ─────────────────────────────── */
-  .day-panels-wrap{margin-top:14px;}
-  .day-panel{background:#fff;border:1px solid #bfdbfe;border-radius:12px;margin-bottom:10px;overflow:hidden;box-shadow:0 2px 12px rgba(14,165,233,0.1);animation:slideIn .2s ease;}
-  @keyframes slideIn{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
-  .day-panel-header{background:linear-gradient(135deg,#f0f9ff,#e8f4fd);padding:14px 18px;border-bottom:1px solid #dbeafe;}
-  .day-panel-date{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
-  .dpd-num{width:38px;height:38px;background:linear-gradient(135deg,#0ea5e9,#22d3ee);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#fff;flex-shrink:0;}
-  .day-panel-bar-wrap{background:#dbeafe;border-radius:4px;height:6px;overflow:hidden;margin-bottom:8px;}
-  .day-panel-bar{height:100%;border-radius:4px;transition:width .3s;}
-  .day-close-btn{background:#f1f5f9;border:1px solid #e2e8f0;border-radius:7px;padding:5px 12px;font-size:10px;font-weight:700;color:#64748b;cursor:pointer;float:right;margin-top:-36px;}
-  .day-close-btn:hover{background:#fee2e2;color:#991b1b;border-color:#fecaca;}
-  .day-panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;}
-  .day-panel-col{padding:14px 18px;border-right:1px solid #f0f4ff;}
-  .day-panel-col:last-child{border-right:none;}
-  .dp-label{font-size:9px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;}
-  .habit-grid{display:flex;flex-direction:column;gap:5px;}
-  .habit-row{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:7px;font-size:10px;}
-  .habit-row.h-done{background:#f0fdf4;border:1px solid #bbf7d0;}
-  .habit-row.h-pending{background:#fff5f5;border:1px solid #fecaca;}
-  .h-chk{font-size:12px;flex-shrink:0;}
-  .h-name{flex:1;font-weight:500;color:#1e293b;}
-  .h-cat{font-size:8px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
-  .status-mini-grid{display:flex;flex-direction:column;gap:6px;}
-  .smg-item{display:flex;align-items:center;gap:8px;background:#f8faff;border:1px solid #e2eeff;border-radius:7px;padding:7px 10px;}
-  .smg-icon{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
-  .smg-lbl{font-size:9px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
-  .smg-val{font-size:12px;font-weight:700;color:#1e293b;}
-  .mini-entry{display:flex;align-items:flex-start;gap:7px;padding:5px 0;border-bottom:1px solid #f0f4ff;font-size:10px;color:#475569;line-height:1.5;}
-  .mini-entry:last-child{border-bottom:none;}
-  .mini-mood-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px;}
-
-  /* ── HELPERS ─────────────────────────────────── */
+  .info-box{background:linear-gradient(135deg,#f0f9ff,#e8f4fd);border:1px solid #bfdbfe;border-left:4px solid #0ea5e9;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:10px;color:#334155;}
+  .info-box strong{color:#0c1e30;}
+  .summary-row{display:flex;gap:20px;flex-wrap:wrap;background:#f0f9ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px 16px;margin-top:12px;font-size:10px;color:#334155;}
   .muted{color:#94a3b8;font-style:italic;}
   .muted-sm{color:#94a3b8;font-size:9px;}
   .center{text-align:center;}
   .page-break{page-break-before:always;padding-top:28px;}
   .no-break{page-break-inside:avoid;}
-
-  /* ── TIPS BOX ────────────────────────────────── */
-  .tips-box{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fde68a;border-left:4px solid #fbbf24;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:10px;color:#78350f;}
-
-  /* ── FOOTER ──────────────────────────────────── */
   .pdf-footer{background:#030b14;color:#3a6a82;font-size:9px;padding:12px 36px;display:flex;justify-content:space-between;align-items:center;margin-top:28px;}
   .footer-brand{color:#7dd3fc;font-weight:700;}
+  .week-day-card{background:#fff;border:1px solid #e2eeff;border-radius:10px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.04);}
+  .week-day-header{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+  .week-day-num{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff;flex-shrink:0;}
+  .week-day-title{font-size:12px;font-weight:700;color:#0c1e30;}
+  .week-day-sub{font-size:9px;color:#64748b;margin-top:1px;}
+  .week-habit-list{display:flex;flex-direction:column;gap:5px;}
+  .week-habit-row{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:7px;font-size:10px;}
+  .week-habit-row.done{background:#f0fdf4;border:1px solid #bbf7d0;}
+  .week-habit-row.pending{background:#fff5f5;border:1px solid #fecaca;}
+  .month-summary-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:16px;}
+  .month-cell{background:#fff;border:1px solid #e2eeff;border-radius:8px;padding:8px 4px;text-align:center;min-height:50px;}
+  .month-cell.today{border-color:#0ea5e9;background:#f0f9ff;}
+  .month-cell.empty{background:transparent;border-color:transparent;}
+  .month-cell .mc-num{font-size:11px;font-weight:700;color:#334155;margin-bottom:4px;}
+  .month-cell .mc-pct{font-size:9px;font-weight:700;}
+  .month-dow{text-align:center;font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;padding:4px 0 6px;}
+  .year-month-card{background:#fff;border:1px solid #e2eeff;border-radius:10px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.04);display:flex;align-items:center;gap:16px;}
+  .year-month-name{font-size:13px;font-weight:800;color:#0c1e30;min-width:80px;}
+  .year-month-bar-wrap{flex:1;background:#e2eeff;border-radius:4px;height:10px;overflow:hidden;}
+  .year-month-bar{height:100%;border-radius:4px;}
+  .year-month-pct{font-size:12px;font-weight:800;min-width:42px;text-align:right;}
+  .year-month-days{font-size:9px;color:#94a3b8;min-width:60px;text-align:right;}
+  @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;background:#fff;}.no-break{page-break-inside:avoid;}}
+  `;
 
-  /* ── PRINT ───────────────────────────────────── */
-  @media print{
-    body{-webkit-print-color-adjust:exact;print-color-adjust:exact;background:#fff;}
-    .no-break{page-break-inside:avoid;}
-    .day-panel{display:block!important;}
+  // ── Shared Header HTML ───────────────────────────────────────────────────
+  const periodEmoji={Harian:'📅',Mingguan:'📆',Bulanan:'🗓️',Tahunan:'📊'};
+  const headerHTML=`
+  <div class="pdf-header">
+    <div class="header-left">
+      <div class="logo-box">✦</div>
+      <div>
+        <div class="header-brand">EUNOIA</div>
+        <div class="header-tagline">Beautiful Mind — Personal Growth Dashboard</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="period-badge">${periodEmoji[period]||'📅'} Rekap ${period}</div>
+      <div class="header-date">${todayStr}</div>
+      <div class="header-user">👤 ${S.userName||'Eunoia User'}</div>
+    </div>
+  </div>
+  <div class="user-card">
+    <div class="user-avatar">${(S.userName||'E').charAt(0).toUpperCase()}</div>
+    <div>
+      <div class="user-name-big">${S.userName||'Eunoia User'}</div>
+      <div class="user-sub">🔥 ${S.streak} hari streak &nbsp;·&nbsp; ${totalCnt} habit terdaftar &nbsp;·&nbsp; ${allRecs.length} hari tercatat</div>
+    </div>
+    <div class="user-stats">
+      <div class="user-stat"><div class="sv" style="color:#0ea5e9">${totalCnt}</div><div class="sl">Habits</div></div>
+      <div class="user-stat"><div class="sv" style="color:#34d399">${doneCnt}</div><div class="sl">Selesai</div></div>
+      <div class="user-stat"><div class="sv" style="color:${pctColor(pctToday)}">${pctToday}%</div><div class="sl">Hari Ini</div></div>
+      <div class="user-stat"><div class="sv" style="color:#f0c040">${S.streak}</div><div class="sl">Streak</div></div>
+    </div>
+  </div>`;
+
+  // ── Goals HTML ────────────────────────────────────────────────────────────
+  const goalsHTML=S.goals.length===0
+    ?'<p class="muted">Belum ada goals.</p>'
+    :S.goals.map((g,i)=>`<div class="entry-card"><div class="entry-meta"><span class="tag-pill">${g.period}</span><span class="muted-sm">${g.date}</span></div><div class="entry-text">${g.text}</div></div>`).join('');
+
+  // ── Diary HTML (filtered by period) ────────────────────────────────────────
+  function buildDiaryHTML(entries,limit){
+    if(!entries||!entries.length)return'<p class="muted">Belum ada diary untuk periode ini.</p>';
+    return entries.slice(0,limit).map(d=>`<div class="entry-card"><div class="entry-meta"><span class="tag-mood">${d.mood}</span><strong style="color:#0c1e30">${d.title}</strong><span class="muted-sm">${d.date} · ${d.time}</span></div><div class="entry-text">${(d.content||'').replace(/\n/g,'<br>')}</div></div>`).join('')
+      +(entries.length>limit?`<p class="muted" style="font-size:10px;margin-top:8px">... dan ${entries.length-limit} entri lainnya. Lihat Excel untuk data lengkap.</p>`:'');
   }
-</style>
+
+  // ── Journal HTML (filtered by period) ───────────────────────────────────
+  function buildJournalHTML(entries,limit){
+    if(!entries||!entries.length)return'<p class="muted">Belum ada jurnal untuk periode ini.</p>';
+    return entries.slice(0,limit).map(j=>{const mc=j.mood>=4?'#34d399':j.mood>=3?'#fbbf24':'#f87171';return`<div class="entry-card"><div class="entry-meta"><span class="badge-mood" style="background:${mc};">${j.emoji} ${j.mood}/5</span><span class="muted-sm">${j.date} · ${j.time}</span></div><div class="entry-text">${(j.content||'').replace(/\n/g,'<br>')}</div></div>`;}).join('')
+      +(entries.length>limit?`<p class="muted" style="font-size:10px;margin-top:8px">... dan ${entries.length-limit} entri lainnya. Lihat Excel untuk data lengkap.</p>`:'');
+  }
+
+  // ── Category rows (current habit status) ─────────────────────────────────
+  const catRowsHTML=CATS.map((cat,i)=>{
+    const items=S.habits.filter(h=>h.cat===cat.id);
+    if(!items.length)return '';
+    const catDone=items.filter(h=>h.done).length;
+    const catPct=Math.round((catDone/items.length)*100);
+    return `<tr class="${i%2===0?'row-a':'row-b'}"><td><strong>${cat.icon} ${cat.id}</strong></td><td class="center">${items.length}</td><td class="center" style="color:#34d399;font-weight:700">${catDone}</td><td class="center" style="color:${pctColor(catPct)};font-weight:800">${catPct}%</td><td><div class="bar-outer"><div class="bar-inner" style="width:${catPct}%;background:${pctColor(catPct)}"></div></div></td><td class="center"><span class="status-pill" style="background:${pctBg(catPct)};color:${pctColor(catPct)}">${pctLabel(catPct)}</span></td></tr>`;
+  }).join('');
+
+  // ── Rekap history table rows ───────────────────────────────────────────────
+  const histRowsHTML=recs.length===0
+    ?'<tr><td colspan="6" class="center muted" style="padding:20px">Belum ada data historis untuk periode ini.</td></tr>'
+    :recs.map((r,i)=>{const d=new Date((r.date||ds(today))+'T00:00:00');const pct=r.pct||0;return`<tr class="${i%2===0?'row-a':'row-b'}"><td style="font-weight:600">${r.date||ds(today)}</td><td class="center">${DAYS()[d.getDay()]||'—'}</td><td class="center">${r.total||0}</td><td class="center" style="color:#34d399;font-weight:700">${r.done||0}</td><td class="center" style="font-weight:800;color:${pctColor(pct)}">${pct}%</td><td class="center"><span class="status-pill" style="background:${pctBg(pct)};color:${pctColor(pct)}">${pctLabel(pct)}</span></td></tr>`;}).join('');
+
+  const summaryFooter=recs.length>0&&bestRec?`<div class="summary-row"><span>📊 Rata-rata: <strong style="color:#0ea5e9">${avgPct}%</strong></span><span>🏆 Terbaik: <strong style="color:#34d399">${getDateLabel(bestRec.date)} (${bestRec.pct}%)</strong></span><span>📅 ${recs.length} hari tercatat</span></div>`:'';
+
+  // ════════════════════════════════════════════════════════════
+  //  HARIAN — Detail 1 hari: status lengkap + detail per habit
+  // ════════════════════════════════════════════════════════════
+  let mainBodyHTML='';
+
+  if(period==='Harian'){
+    const todayRec=recs[0]||{date:ds(today),total:totalCnt,done:doneCnt,pct:pctToday,snapshot:S.habits.map(h=>({title:h.title,cat:h.cat,done:h.done}))};
+    const snap=todayRec.snapshot||S.habits.map(h=>({title:h.title,cat:h.cat,done:h.done}));
+    const moodVal=S.moodToday&&S.moodToday.mood>0?(S.moodToday.emoji+' '+S.moodToday.mood+'/5'):'Belum diisi';
+    const medVal=S.medicineTaken&&S.medicineTaken.taken?'✅ Sudah diminum':'❌ Belum diminum';
+    const afirmasiVal=S.afirmasiToday&&S.afirmasiToday.text?'"'+S.afirmasiToday.text+'"':'Belum diisi';
+    const todayDiary=S.diary.filter(d=>d.date===ds(today));
+    const todayJournal=journals.filter(j=>j.date===ds(today));
+
+    mainBodyHTML=`
+    <div class="stat-cards">
+      <div class="stat-card" style="--c:#0ea5e9"><div class="sv">${totalCnt}</div><div class="sl">Total Habit</div><div class="ss">Terdaftar</div></div>
+      <div class="stat-card" style="--c:#34d399"><div class="sv">${doneCnt}</div><div class="sl">Selesai</div><div class="ss">dari ${totalCnt} habit</div></div>
+      <div class="stat-card" style="--c:${pctColor(pctToday)}"><div class="sv">${pctToday}%</div><div class="sl">Progress</div><div class="ss">${pctLabel(pctToday)}</div></div>
+      <div class="stat-card" style="--c:#f0c040"><div class="sv">${S.streak}</div><div class="sl">Streak</div><div class="ss">hari berturut</div></div>
+    </div>
+
+    <div class="section no-break">
+      <div class="section-header"><div class="section-title">◆ Status Hari Ini — ${todayStr}</div></div>
+      <div class="status-grid">
+        <div class="status-item"><div class="status-dot" style="background:${S.moodToday&&S.moodToday.mood>0?'#34d399':'#f87171'}"></div><div><div class="status-label">Mood</div><div class="status-val">${moodVal}</div></div></div>
+        <div class="status-item"><div class="status-dot" style="background:${S.medicineTaken&&S.medicineTaken.taken?'#34d399':'#f87171'}"></div><div><div class="status-label">Minum Obat (${S.medicineName})</div><div class="status-val">${medVal}</div></div></div>
+        <div class="status-item" style="grid-column:span 2"><div class="status-dot" style="background:${S.afirmasiToday&&S.afirmasiToday.text?'#34d399':'#f87171'}"></div><div><div class="status-label">Afirmasi Positif</div><div class="status-val">${afirmasiVal}</div></div></div>
+      </div>
+    </div>
+
+    <div class="section no-break">
+      <div class="section-header"><div class="section-title">◆ Rekap Habit Per Kategori</div></div>
+      <table><thead><tr><th>Kategori</th><th class="center">Total</th><th class="center">Selesai</th><th class="center">Progress</th><th>Bar</th><th class="center">Status</th></tr></thead><tbody>${catRowsHTML}</tbody></table>
+    </div>
+
+    <div class="section page-break no-break">
+      <div class="section-header"><div class="section-title">◆ Detail Habit Hari Ini</div><span class="section-count">${doneCnt}/${totalCnt} Selesai</span></div>
+      <table><thead><tr><th class="center">No</th><th>Habit / Kebiasaan</th><th class="center">Kategori</th><th class="center">Status</th></tr></thead>
+      <tbody>${snap.map((h,i)=>`<tr class="${i%2===0?'row-a':'row-b'}"><td class="center" style="color:#94a3b8">${i+1}</td><td><strong>${h.title}</strong></td><td class="center"><span class="cat-chip">${CATS.find(c=>c.id===h.cat)?.icon||'•'} ${h.cat}</span></td><td class="center"><span class="badge ${h.done?'badge-done':'badge-pending'}">${h.done?'✅ Selesai':'⏳ Belum'}</span></td></tr>`).join('')}</tbody></table>
+    </div>
+
+    ${todayDiary.length>0?`<div class="section page-break"><div class="section-header"><div class="section-title">◆ Diary Hari Ini</div></div>${buildDiaryHTML(todayDiary,10)}</div>`:''}
+    ${todayJournal.length>0?`<div class="section"><div class="section-header"><div class="section-title">◆ Jurnal Perasaan Hari Ini</div></div>${buildJournalHTML(todayJournal,10)}</div>`:''}
+
+    <div class="section page-break">
+      <div class="section-header"><div class="section-title">◆ Goals / Tujuan Hidup</div><span class="section-count">${S.goals.length} goals</span></div>
+      ${goalsHTML}
+    </div>`;
+  }
+
+  // ════════════════════════════════════════════════════════════
+  //  MINGGUAN — 7 hari: ringkasan + detail per hari
+  // ════════════════════════════════════════════════════════════
+  else if(period==='Mingguan'){
+    const weekDiaryFilter=recs.map(r=>r.date);
+    const weekDiary=S.diary.filter(d=>weekDiaryFilter.includes(d.date));
+    const weekJournal=journals.filter(j=>weekDiaryFilter.includes(j.date));
+
+    const weekDayCardsHTML=recs.map((r,i)=>{
+      const d=new Date((r.date||ds(today))+'T00:00:00');
+      const pct=r.pct||0;
+      const snap=r.snapshot||[];
+      const dayDiary=S.diary.filter(dy=>dy.date===r.date);
+      const dayMood=r.mood||(S.moodToday&&S.moodToday.date===r.date?`${S.moodToday.emoji} ${S.moodToday.mood}/5`:'—');
+      return `<div class="week-day-card no-break">
+        <div class="week-day-header">
+          <div class="week-day-num" style="background:${pctColor(pct)}">${d.getDate()}</div>
+          <div>
+            <div class="week-day-title">${DAYS()[d.getDay()]}, ${d.getDate()} ${MONF()[d.getMonth()]} ${d.getFullYear()}</div>
+            <div class="week-day-sub">${r.done||0}/${r.total||0} habit selesai &nbsp;·&nbsp; Progress: <strong style="color:${pctColor(pct)}">${pct}%</strong>${typeof dayMood==='string'&&dayMood!=='—'?` &nbsp;·&nbsp; Mood: ${dayMood}`:''}</div>
+          </div>
+          <span class="status-pill" style="background:${pctBg(pct)};color:${pctColor(pct)};margin-left:auto">${pctLabel(pct)}</span>
+        </div>
+        ${snap.length>0?`<div class="week-habit-list">${snap.map(h=>`<div class="week-habit-row ${h.done?'done':'pending'}"><span>${h.done?'✅':'⏳'}</span><span style="flex:1;font-weight:500">${h.title}</span><span style="font-size:8px;color:#94a3b8;text-transform:uppercase">${h.cat}</span></div>`).join('')}</div>`:'<p class="muted-sm" style="padding:4px 0">Tidak ada data habit untuk tanggal ini.</p>'}
+        ${dayDiary.length>0?`<div style="margin-top:8px;padding-top:8px;border-top:1px solid #f0f4ff;">${dayDiary.map(dy=>`<div style="font-size:9px;color:#475569;padding:3px 0">${dy.mood} <strong>${dy.title}</strong> — ${(dy.content||'').slice(0,100)}${(dy.content||'').length>100?'...':''}</div>`).join('')}</div>`:''}
+      </div>`;
+    }).join('');
+
+    mainBodyHTML=`
+    <div class="stat-cards">
+      <div class="stat-card" style="--c:#0ea5e9"><div class="sv">${recs.length}</div><div class="sl">Hari Dicatat</div><div class="ss">dalam 7 hari</div></div>
+      <div class="stat-card" style="--c:${pctColor(avgPct)}"><div class="sv">${avgPct}%</div><div class="sl">Rata-rata</div><div class="ss">${pctLabel(avgPct)}</div></div>
+      <div class="stat-card" style="--c:#34d399"><div class="sv">${bestRec?bestRec.pct+'%':'—'}</div><div class="sl">Hari Terbaik</div><div class="ss">${bestRec?getDateLabel(bestRec.date).split(',')[0]:'—'}</div></div>
+      <div class="stat-card" style="--c:#f0c040"><div class="sv">${S.streak}</div><div class="sl">Streak</div><div class="ss">hari berturut</div></div>
+    </div>
+
+    <div class="section no-break">
+      <div class="section-header"><div class="section-title">◆ Ringkasan 7 Hari Terakhir</div></div>
+      <table><thead><tr><th>Tanggal</th><th class="center">Hari</th><th class="center">Total</th><th class="center">Selesai</th><th class="center">Progress</th><th class="center">Status</th></tr></thead><tbody>${histRowsHTML}</tbody></table>
+      ${summaryFooter}
+    </div>
+
+    <div class="section no-break">
+      <div class="section-header"><div class="section-title">◆ Rekap Habit Per Kategori (Hari Ini)</div></div>
+      <table><thead><tr><th>Kategori</th><th class="center">Total</th><th class="center">Selesai</th><th class="center">Progress</th><th>Bar</th><th class="center">Status</th></tr></thead><tbody>${catRowsHTML}</tbody></table>
+    </div>
+
+    <div class="section page-break">
+      <div class="section-header"><div class="section-title">◆ Detail Per Hari — 7 Hari</div><span class="section-count">${recs.length} hari</span></div>
+      ${weekDayCardsHTML}
+    </div>
+
+    ${weekDiary.length>0?`<div class="section page-break"><div class="section-header"><div class="section-title">◆ Diary Minggu Ini</div><span class="section-count">${weekDiary.length} entri</span></div>${buildDiaryHTML(weekDiary.reverse(),15)}</div>`:''}
+    ${weekJournal.length>0?`<div class="section"><div class="section-header"><div class="section-title">◆ Jurnal Perasaan Minggu Ini</div><span class="section-count">${weekJournal.length} entri</span></div>${buildJournalHTML(weekJournal.reverse(),15)}</div>`:''}
+
+    <div class="section page-break">
+      <div class="section-header"><div class="section-title">◆ Goals / Tujuan Hidup</div><span class="section-count">${S.goals.length} goals</span></div>
+      ${goalsHTML}
+    </div>`;
+  }
+
+  // ════════════════════════════════════════════════════════════
+  //  BULANAN — Bulan ini: grid per tanggal + ringkasan
+  // ════════════════════════════════════════════════════════════
+  else if(period==='Bulanan'){
+    const yr=today.getFullYear(),mo=today.getMonth();
+    const daysInMonth=new Date(yr,mo+1,0).getDate();
+    const firstDow=new Date(yr,mo,1).getDay();
+    const monthNameFull=MONF_ID[mo];
+    const dayNames=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+
+    // Build map
+    const histMap={};
+    recs.forEach(r=>{if(r.date)histMap[r.date]=r;});
+
+    // Calendar grid (static — no click)
+    let calCellsHTML='';
+    for(let i=0;i<firstDow;i++) calCellsHTML+=`<div class="month-cell empty"></div>`;
+    for(let d=1;d<=daysInMonth;d++){
+      const dateStr=`${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const rec=histMap[dateStr];
+      const isToday=dateStr===ds(today);
+      const isFuture=new Date(dateStr+'T00:00:00')>today;
+      const pct=rec?rec.pct||0:null;
+      calCellsHTML+=`<div class="month-cell${isToday?' today':''}">
+        <div class="mc-num" style="${isToday?'color:#0ea5e9;font-weight:900;':''}">${d}</div>
+        ${pct!==null?`<div class="mc-pct" style="color:${pctColor(pct)}">${pct}%</div>`:(isFuture?'':rec===undefined?`<div style="font-size:8px;color:#cbd5e1">—</div>`:'')}
+      </div>`;
+    }
+
+    const monthBestDay=recs.length>0?recs.reduce((a,r)=>(r.pct||0)>(a.pct||0)?r:a,recs[0]):null;
+    const monthAvg=recs.length>0?Math.round(recs.reduce((a,r)=>a+(r.pct||0),0)/recs.length):0;
+    const monthDiary=S.diary.filter(d2=>{const[y2,m2]=d2.date.split('-').map(Number);return y2===yr&&m2===mo+1;});
+    const monthJournal=journals.filter(j=>{const[y2,m2]=j.date.split('-').map(Number);return y2===yr&&m2===mo+1;});
+
+    mainBodyHTML=`
+    <div class="stat-cards">
+      <div class="stat-card" style="--c:#0ea5e9"><div class="sv">${recs.length}</div><div class="sl">Hari Dicatat</div><div class="ss">dari ${daysInMonth} hari</div></div>
+      <div class="stat-card" style="--c:${pctColor(monthAvg)}"><div class="sv">${monthAvg}%</div><div class="sl">Rata-rata Bulan</div><div class="ss">${pctLabel(monthAvg)}</div></div>
+      <div class="stat-card" style="--c:#34d399"><div class="sv">${monthBestDay?monthBestDay.pct+'%':'—'}</div><div class="sl">Hari Terbaik</div><div class="ss">${monthBestDay?new Date(monthBestDay.date+'T00:00:00').getDate()+' '+MONF()[mo]:'—'}</div></div>
+      <div class="stat-card" style="--c:#f0c040"><div class="sv">${S.streak}</div><div class="sl">Streak</div><div class="ss">hari berturut</div></div>
+    </div>
+
+    <div class="section no-break">
+      <div class="section-header"><div class="section-title">◆ Kalender Progress — ${monthNameFull} ${yr}</div></div>
+      <div style="background:#fff;border:1px solid #e2eeff;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+        <div style="font-size:13px;font-weight:800;color:#0c1e30;text-align:center;margin-bottom:12px;">${monthNameFull} ${yr}</div>
+        <div style="display:flex;gap:12px;align-items:center;margin-bottom:10px;flex-wrap:wrap;font-size:9px;color:#64748b;font-weight:600;">
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#34d399;margin-right:4px;"></span>≥80% Luar Biasa</span>
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#0ea5e9;margin-right:4px;"></span>≥60% Baik</span>
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#fbbf24;margin-right:4px;"></span>≥40% Cukup</span>
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f87171;margin-right:4px;"></span>&lt;40% Perlu Usaha</span>
+        </div>
+        <div class="month-summary-grid">
+          ${dayNames.map(d=>`<div class="month-dow">${d}</div>`).join('')}
+          ${calCellsHTML}
+        </div>
+      </div>
+    </div>
+
+    <div class="section no-break">
+      <div class="section-header"><div class="section-title">◆ Rekap Per Hari — ${monthNameFull} ${yr}</div><span class="section-count">${recs.length} hari tercatat</span></div>
+      <table><thead><tr><th>Tanggal</th><th class="center">Hari</th><th class="center">Total</th><th class="center">Selesai</th><th class="center">Progress</th><th class="center">Status</th></tr></thead><tbody>${histRowsHTML}</tbody></table>
+      ${summaryFooter}
+    </div>
+
+    <div class="section no-break">
+      <div class="section-header"><div class="section-title">◆ Rekap Habit Per Kategori (Hari Ini)</div></div>
+      <table><thead><tr><th>Kategori</th><th class="center">Total</th><th class="center">Selesai</th><th class="center">Progress</th><th>Bar</th><th class="center">Status</th></tr></thead><tbody>${catRowsHTML}</tbody></table>
+    </div>
+
+    ${monthDiary.length>0?`<div class="section page-break"><div class="section-header"><div class="section-title">◆ Diary Bulan ${monthNameFull}</div><span class="section-count">${monthDiary.length} entri</span></div>${buildDiaryHTML(monthDiary.slice().reverse(),15)}</div>`:''}
+    ${monthJournal.length>0?`<div class="section"><div class="section-header"><div class="section-title">◆ Jurnal Perasaan Bulan ${monthNameFull}</div><span class="section-count">${monthJournal.length} entri</span></div>${buildJournalHTML(monthJournal.slice().reverse(),15)}</div>`:''}
+
+    <div class="section page-break">
+      <div class="section-header"><div class="section-title">◆ Goals / Tujuan Hidup</div><span class="section-count">${S.goals.length} goals</span></div>
+      ${goalsHTML}
+    </div>`;
+  }
+
+  // ════════════════════════════════════════════════════════════
+  //  TAHUNAN — Tahun ini: ringkasan per bulan + grafik bar
+  // ════════════════════════════════════════════════════════════
+  else if(period==='Tahunan'){
+    const yr=today.getFullYear();
+    // Group all records by month
+    const byMonth={};
+    allRecs.forEach(r=>{
+      if(!r.date)return;
+      const[ry,rm]=r.date.split('-').map(Number);
+      if(ry!==yr)return;
+      const key=String(rm).padStart(2,'0');
+      if(!byMonth[key])byMonth[key]=[];
+      byMonth[key].push(r);
+    });
+
+    const monthCardsHTML=Object.entries(byMonth).sort(([a],[b])=>a-b).map(([m,mrs])=>{
+      const avg=Math.round(mrs.reduce((a,r)=>a+(r.pct||0),0)/mrs.length);
+      const best=mrs.reduce((a,r)=>(r.pct||0)>(a.pct||0)?r:a,mrs[0]);
+      return `<div class="year-month-card no-break">
+        <div class="year-month-name">${MONF_ID[parseInt(m)-1]}</div>
+        <div class="year-month-bar-wrap"><div class="year-month-bar" style="width:${avg}%;background:${pctColor(avg)}"></div></div>
+        <div class="year-month-pct" style="color:${pctColor(avg)}">${avg}%</div>
+        <div class="year-month-days">${mrs.length} hari<br><span style="font-size:8px;color:#94a3b8">${pctLabel(avg)}</span></div>
+      </div>`;
+    }).join('');
+
+    // Monthly summary table
+    const monthTableRows=Object.entries(byMonth).sort(([a],[b])=>a-b).map(([m,mrs],i)=>{
+      const avg=Math.round(mrs.reduce((a,r)=>a+(r.pct||0),0)/mrs.length);
+      const best=mrs.reduce((a,r)=>(r.pct||0)>(a.pct||0)?r:a,mrs[0]);
+      const worst=mrs.reduce((a,r)=>(r.pct||0)<(a.pct||0)?r:a,mrs[0]);
+      return `<tr class="${i%2===0?'row-a':'row-b'}">
+        <td><strong>${MONF_ID[parseInt(m)-1]}</strong></td>
+        <td class="center">${mrs.length}</td>
+        <td class="center" style="color:${pctColor(avg)};font-weight:800">${avg}%</td>
+        <td class="center"><span class="status-pill" style="background:${pctBg(avg)};color:${pctColor(avg)}">${pctLabel(avg)}</span></td>
+        <td class="center" style="color:#34d399;font-weight:700">${best.pct}%</td>
+        <td class="center" style="color:#f87171;font-weight:700">${worst.pct}%</td>
+      </tr>`;
+    }).join('');
+
+    const totalYearDays=allRecs.filter(r=>r.date&&r.date.startsWith(yr+'')).length;
+    const yearAvg=totalYearDays>0?Math.round(allRecs.filter(r=>r.date&&r.date.startsWith(yr+'')).reduce((a,r)=>a+(r.pct||0),0)/totalYearDays):0;
+    const yearBest=allRecs.filter(r=>r.date&&r.date.startsWith(yr+'')).length>0?allRecs.filter(r=>r.date&&r.date.startsWith(yr+'')).reduce((a,r)=>(r.pct||0)>(a.pct||0)?r:a):null;
+
+    const yearDiary=S.diary.filter(d2=>d2.date&&d2.date.startsWith(yr+''));
+    const yearJournal=journals.filter(j=>j.date&&j.date.startsWith(yr+''));
+
+    mainBodyHTML=`
+    <div class="stat-cards">
+      <div class="stat-card" style="--c:#0ea5e9"><div class="sv">${totalYearDays}</div><div class="sl">Total Hari</div><div class="ss">dicatat ${yr}</div></div>
+      <div class="stat-card" style="--c:${pctColor(yearAvg)}"><div class="sv">${yearAvg}%</div><div class="sl">Rata-rata Tahunan</div><div class="ss">${pctLabel(yearAvg)}</div></div>
+      <div class="stat-card" style="--c:#34d399"><div class="sv">${yearBest?yearBest.pct+'%':'—'}</div><div class="sl">Hari Terbaik</div><div class="ss">${yearBest?new Date(yearBest.date+'T00:00:00').getDate()+' '+MONF()[new Date(yearBest.date+'T00:00:00').getMonth()]:'—'}</div></div>
+      <div class="stat-card" style="--c:#f0c040"><div class="sv">${Object.keys(byMonth).length}</div><div class="sl">Bulan Aktif</div><div class="ss">dari 12 bulan</div></div>
+    </div>
+
+    <div class="section no-break">
+      <div class="section-header"><div class="section-title">◆ Progress Per Bulan — ${yr}</div></div>
+      ${Object.keys(byMonth).length===0?'<p class="muted">Belum ada data untuk tahun ini.</p>':monthCardsHTML}
+    </div>
+
+    <div class="section no-break">
+      <div class="section-header"><div class="section-title">◆ Ringkasan Bulanan ${yr}</div><span class="section-count">${Object.keys(byMonth).length} bulan tercatat</span></div>
+      ${Object.keys(byMonth).length===0?'<p class="muted">Belum ada data.</p>':`
+      <table><thead><tr><th>Bulan</th><th class="center">Hari</th><th class="center">Rata-rata</th><th class="center">Status</th><th class="center">Terbaik</th><th class="center">Terendah</th></tr></thead><tbody>${monthTableRows}</tbody></table>
+      <div class="summary-row"><span>📊 Rata-rata tahunan: <strong style="color:#0ea5e9">${yearAvg}%</strong></span><span>📅 ${totalYearDays} hari tercatat di ${yr}</span><span>🗓️ ${Object.keys(byMonth).length} bulan aktif</span></div>`}
+    </div>
+
+    <div class="section no-break">
+      <div class="section-header"><div class="section-title">◆ Rekap Habit Per Kategori (Saat Ini)</div></div>
+      <table><thead><tr><th>Kategori</th><th class="center">Total</th><th class="center">Selesai</th><th class="center">Progress</th><th>Bar</th><th class="center">Status</th></tr></thead><tbody>${catRowsHTML}</tbody></table>
+    </div>
+
+    ${yearDiary.length>0?`<div class="section page-break"><div class="section-header"><div class="section-title">◆ Diary Tahun ${yr}</div><span class="section-count">${yearDiary.length} entri</span></div>${buildDiaryHTML(yearDiary.slice().reverse(),20)}</div>`:''}
+    ${yearJournal.length>0?`<div class="section"><div class="section-header"><div class="section-title">◆ Jurnal Perasaan Tahun ${yr}</div><span class="section-count">${yearJournal.length} entri</span></div>${buildJournalHTML(yearJournal.slice().reverse(),20)}</div>`:''}
+
+    <div class="section page-break">
+      <div class="section-header"><div class="section-title">◆ Goals / Tujuan Hidup</div><span class="section-count">${S.goals.length} goals</span></div>
+      ${goalsHTML}
+    </div>`;
+  }
+
+  const html=`<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Eunoia — Laporan ${period} ${ds(today)}</title>
+<style>${sharedCSS}</style>
 </head>
 <body>
-
-<!-- ░░ HEADER ░░ -->
-<div class="pdf-header">
-  <div class="header-left">
-    <div class="logo-box">✦</div>
-    <div>
-      <div class="header-brand">EUNOIA</div>
-      <div class="header-tagline">Beautiful Mind — Personal Growth Dashboard</div>
-    </div>
-  </div>
-  <div class="header-right">
-    <div class="period-badge">📅 ${S.exportPeriod}</div>
-    <div class="header-date">${todayStr}</div>
-    <div class="header-user">👤 ${S.userName||'Eunoia User'}</div>
-  </div>
-</div>
-
-<!-- ░░ USER CARD ░░ -->
-<div class="user-card">
-  <div class="user-avatar">${(S.userName||'E').charAt(0).toUpperCase()}</div>
-  <div>
-    <div class="user-name-big">${S.userName||'Eunoia User'}</div>
-    <div class="user-sub">🔥 ${S.streak} hari streak berturut-turut &nbsp;·&nbsp; ${totalCnt} habit terdaftar &nbsp;·&nbsp; ${allRecs.length} hari tercatat</div>
-  </div>
-  <div class="user-stats">
-    <div class="user-stat"><div class="sv" style="color:#0ea5e9">${totalCnt}</div><div class="sl">Habits</div></div>
-    <div class="user-stat"><div class="sv" style="color:#34d399">${doneCnt}</div><div class="sl">Selesai</div></div>
-    <div class="user-stat"><div class="sv" style="color:${pctColor(pctToday)}">${pctToday}%</div><div class="sl">Progress</div></div>
-    <div class="user-stat"><div class="sv" style="color:#f0c040">${S.streak}</div><div class="sl">Streak</div></div>
-  </div>
-</div>
-
-<!-- ░░ STAT CARDS ░░ -->
-<div class="stat-cards">
-  <div class="stat-card" style="--c:#0ea5e9"><div class="sv">${totalCnt}</div><div class="sl">Total Habit</div><div class="ss">Terdaftar</div></div>
-  <div class="stat-card" style="--c:#34d399"><div class="sv">${doneCnt}</div><div class="sl">Selesai Hari Ini</div><div class="ss">dari ${totalCnt} habit</div></div>
-  <div class="stat-card" style="--c:${pctColor(pctToday)}"><div class="sv">${pctToday}%</div><div class="sl">Progress Hari Ini</div><div class="ss">${pctLabel(pctToday)}</div></div>
-  <div class="stat-card" style="--c:${pctColor(avgPct)}"><div class="sv">${avgPct}%</div><div class="sl">Rata-rata ${S.exportPeriod}</div><div class="ss">${recs.length} hari tercatat</div></div>
-</div>
-
-<!-- ░░ STATUS HARI INI ░░ -->
-<div class="section no-break">
-  <div class="section-header"><div class="section-title">◆ Status Hari Ini</div></div>
-  <div class="status-grid">
-    <div class="status-item">
-      <div class="status-dot" style="background:${S.moodToday&&S.moodToday.mood>0?'#34d399':'#f87171'}"></div>
-      <div><div class="status-label">Mood Hari Ini</div><div class="status-val">${S.moodToday&&S.moodToday.mood>0?(S.moodToday.emoji+' '+S.moodToday.mood+'/5'):'Belum diisi'}</div></div>
-    </div>
-    <div class="status-item">
-      <div class="status-dot" style="background:${S.medicineTaken&&S.medicineTaken.taken?'#34d399':'#f87171'}"></div>
-      <div><div class="status-label">Minum Obat · ${S.medicineName}</div><div class="status-val">${S.medicineTaken&&S.medicineTaken.taken?'✅ Sudah diminum':'❌ Belum diminum'}</div></div>
-    </div>
-    <div class="status-item" style="grid-column:span 2">
-      <div class="status-dot" style="background:${S.afirmasiToday&&S.afirmasiToday.text?'#34d399':'#f87171'}"></div>
-      <div><div class="status-label">Afirmasi Positif Hari Ini</div><div class="status-val">${S.afirmasiToday&&S.afirmasiToday.text?'"'+S.afirmasiToday.text+'"':'Belum diisi'}</div></div>
-    </div>
-  </div>
-</div>
-
-<!-- ░░ HABIT PER KATEGORI ░░ -->
-<div class="section no-break">
-  <div class="section-header"><div class="section-title">◆ Rekap Habit Per Kategori</div></div>
-  <table>
-    <thead><tr><th>Kategori</th><th class="center">Total</th><th class="center">Selesai</th><th class="center">Progress</th><th>Bar</th><th class="center">Status</th></tr></thead>
-    <tbody>${catRowsHTML}</tbody>
-  </table>
-</div>
-
-<!-- ░░ DETAIL HABIT HARI INI ░░ -->
-<div class="section page-break no-break">
-  <div class="section-header"><div class="section-title">◆ Detail Habit Hari Ini</div><span class="section-count">${doneCnt}/${totalCnt} Selesai</span></div>
-  <table>
-    <thead><tr><th class="center">No</th><th>Habit / Kebiasaan</th><th class="center">Kategori</th><th class="center">Status</th></tr></thead>
-    <tbody>${habitRowsHTML}</tbody>
-  </table>
-</div>
-
-<!-- ░░ KALENDER BULANAN INTERAKTIF ░░ -->
-<div class="section page-break">
-  <div class="section-header"><div class="section-title">◆ Kalender Habit — ${monthName} ${yr}</div><span class="section-count">Klik tanggal untuk lihat detail habit</span></div>
-
-  <div class="tips-box">
-    💡 <strong>Cara Pakai:</strong> Klik tanggal yang ingin dilihat untuk membuka/menutup detail habit harian. Tanggal yang punya data akan menampilkan persentase progres.
-  </div>
-
-  <div class="cal-intro">
-    <div class="cal-month-label">📅 ${monthName} ${yr}</div>
-    <div class="cal-legend">
-      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#34d399"></div> ≥80% (Luar Biasa)</div>
-      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#0ea5e9"></div> ≥60% (Baik)</div>
-      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#fbbf24"></div> ≥40% (Cukup)</div>
-      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#f87171"></div> &lt;40% (Perlu Usaha)</div>
-      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#e2e8f0"></div> Belum ada data</div>
-    </div>
-    <div class="cal-grid">
-      ${dayNames.map(d=>`<div class="cal-dow">${d}</div>`).join('')}
-      ${calCells}
-    </div>
-  </div>
-
-  <!-- Day panels rendered here -->
-  <div class="day-panels-wrap" id="dayPanelsWrap">
-    ${dayPanels}
-  </div>
-</div>
-
-<!-- ░░ REKAP HISTORIS ░░ -->
-<div class="section page-break no-break">
-  <div class="section-header"><div class="section-title">◆ Rekap Historis — ${S.exportPeriod}</div><span class="section-count">${recs.length} hari tercatat</span></div>
-  <table>
-    <thead><tr><th>Tanggal</th><th class="center">Hari</th><th class="center">Total</th><th class="center">Selesai</th><th class="center">Progress</th><th class="center">Status</th></tr></thead>
-    <tbody>${histRowsHTML}</tbody>
-  </table>
-  ${recs.length>0&&bestRec?`<div style="margin-top:12px;padding:10px 14px;background:#f0f9ff;border:1px solid #bfdbfe;border-radius:8px;font-size:10px;color:#334155;display:flex;gap:20px;flex-wrap:wrap;">
-    <span>📊 Rata-rata: <strong style="color:#0ea5e9">${avgPct}%</strong></span>
-    <span>🏆 Hari Terbaik: <strong style="color:#34d399">${getDateLabel(bestRec.date)} (${bestRec.pct}%)</strong></span>
-    <span>📅 ${recs.length} hari tercatat dalam periode ini</span>
-  </div>`:''}
-</div>
-
-<!-- ░░ GOALS ░░ -->
-<div class="section page-break">
-  <div class="section-header"><div class="section-title">◆ Goals / Tujuan Hidup</div><span class="section-count">${S.goals.length} goals</span></div>
-  ${goalsHTML}
-</div>
-
-<!-- ░░ DIARY ░░ -->
-<div class="section">
-  <div class="section-header"><div class="section-title">◆ Diary / Catatan Harian</div><span class="section-count">${S.diary.length} entri</span></div>
-  ${diaryHTMLfull}
-  ${S.diary.length>12?`<p class="muted" style="font-size:10px;margin-top:8px">... dan ${S.diary.length-12} entri lainnya. Lihat Excel untuk data lengkap.</p>`:''}
-</div>
-
-<!-- ░░ JURNAL PERASAAN ░░ -->
-${journals.length>0?`
-<div class="section page-break">
-  <div class="section-header"><div class="section-title">◆ Jurnal Perasaan</div><span class="section-count">${journals.length} entri</span></div>
-  ${jurnalHTMLfull}
-  ${journals.length>12?`<p class="muted" style="font-size:10px;margin-top:8px">... dan ${journals.length-12} entri lainnya. Lihat Excel untuk data lengkap.</p>`:''}
-</div>`:''}
-
-<!-- ░░ FOOTER ░░ -->
+${headerHTML}
+${mainBodyHTML}
+<div style="position:fixed;bottom:24px;right:24px;background:linear-gradient(135deg,#0ea5e9,#22d3ee);color:#fff;font-size:13px;font-weight:800;padding:14px 22px;border-radius:50px;cursor:pointer;box-shadow:0 6px 24px rgba(14,165,233,0.45);display:flex;align-items:center;gap:8px;z-index:999;" onclick="window.print()">🖨️ Cetak / Save PDF</div>
 <div class="pdf-footer">
-  <span><span class="footer-brand">✦ EUNOIA</span> — Beautiful Mind &nbsp;·&nbsp; Laporan ${S.exportPeriod} &nbsp;·&nbsp; ${todayStr}</span>
+  <span><span class="footer-brand">✦ EUNOIA</span> — Beautiful Mind &nbsp;·&nbsp; Laporan ${period} &nbsp;·&nbsp; ${todayStr}</span>
   <span>Dibuat: ${today.toLocaleTimeString('id-ID')} &nbsp;·&nbsp; Pengguna: ${S.userName||'—'}</span>
 </div>
-
-<script>
-function toggleDay(id){
-  var el=document.getElementById(id);
-  if(!el)return;
-  var isOpen=el.style.display!=='none'&&el.style.display!=='';
-  if(isOpen){
-    el.style.display='none';
-  } else {
-    el.style.display='block';
-    el.scrollIntoView({behavior:'smooth',block:'nearest'});
-  }
-}
-// Auto-open today's panel if it exists
-(function(){
-  var todayStr='${ds(today)}';
-  var el=document.getElementById('day-'+todayStr);
-  if(el){el.style.display='block';}
-})();
-<\/script>
-
 </body>
 </html>`;
 
-  // Open in new tab
-  const blob=new Blob([html],{type:'text/html'});
-  const url=URL.createObjectURL(blob);
-  const win=window.open(url,'_blank');
-  if(!win){toast('⚠️ Popup diblokir! Izinkan popup di browser kamu lalu coba lagi.');URL.revokeObjectURL(url);return;}
-  win.onload=()=>{
-    setTimeout(()=>{
-      win.focus();
-      win.print();
-      setTimeout(()=>URL.revokeObjectURL(url),8000);
-    },800);
-  };
-  toast(t('pdf-ok'));
+  // Open in new window — user prints/saves as PDF natively (much better quality)
+  toast('📄 Laporan dibuka di tab baru. Gunakan Ctrl+P / Cmd+P untuk simpan sebagai PDF.');
+  const win=window.open('','_blank');
+  if(!win){toast('⚠️ Pop-up diblokir. Izinkan pop-up lalu coba lagi.');return;}
+  win.document.open();win.document.write(html);win.document.close();
+  setTimeout(()=>{try{win.focus();win.print();}catch(e){}},1200);
+}
+// ── LEGACY RENDER (unused placeholder) ─────────────────────────────────────
+function _unusedRender(){
+  const fname=`Eunoia_Laporan_${S.exportPeriod}.pdf`;
+
+  // Create hidden container
+  const wrap=document.createElement('div');
+  wrap.style.cssText='position:fixed;left:-9999px;top:0;width:794px;background:#f0f4f8;z-index:-1;';
+  wrap.innerHTML=html;
+  document.body.appendChild(wrap);
+
+  // Wait for fonts/images then capture
+  setTimeout(async()=>{
+    try{
+      const {jsPDF}=window.jspdf;
+      const A4W=794,A4H=1123; // px at 96dpi
+      const canvas=await html2canvas(wrap,{
+        scale:2,
+        useCORS:true,
+        allowTaint:true,
+        backgroundColor:'#f0f4f8',
+        width:A4W,
+        windowWidth:A4W,
+        logging:false,
+      });
+      document.body.removeChild(wrap);
+      const imgData=canvas.toDataURL('image/jpeg',0.92);
+      const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+      const pdfW=pdf.internal.pageSize.getWidth();
+      const pdfH=pdf.internal.pageSize.getHeight();
+      const ratio=canvas.width/canvas.height;
+      const totalPdfH=pdfW/ratio*(canvas.height/canvas.width)*canvas.height/canvas.width;
+      // Split into pages
+      const pageHeightPx=canvas.width*(pdfH/pdfW);
+      const totalPages=Math.ceil(canvas.height/pageHeightPx);
+      for(let i=0;i<totalPages;i++){
+        if(i>0)pdf.addPage();
+        const srcY=i*pageHeightPx;
+        const srcH=Math.min(pageHeightPx,canvas.height-srcY);
+        const pageCanvas=document.createElement('canvas');
+        pageCanvas.width=canvas.width;
+        pageCanvas.height=srcH;
+        const ctx=pageCanvas.getContext('2d');
+        ctx.drawImage(canvas,0,srcY,canvas.width,srcH,0,0,canvas.width,srcH);
+        const pageImg=pageCanvas.toDataURL('image/jpeg',0.92);
+        const imgH=(srcH/canvas.width)*pdfW;
+        pdf.addImage(pageImg,'JPEG',0,0,pdfW,imgH);
+      }
+      pdf.save(fname);
+      toast('✅ PDF berhasil didownload!');
+    }catch(err){
+      if(document.body.contains(wrap))document.body.removeChild(wrap);
+      console.error(err);
+      toast('⚠️ Gagal buat PDF. Coba lagi.');
+    }
+  },800);
 }
 
 // ── PROFILE ──────────────────────────────────────────────────────────────────
